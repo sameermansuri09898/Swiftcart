@@ -21,7 +21,7 @@ export default function Navbar() {
   return (
     <>
       {/* Navbar */}
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-200 mb-10">
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-6 h-20 flex items-center justify-between gap-5">
 
           {/* Left */}
@@ -83,13 +83,15 @@ export default function Navbar() {
             />
           </div>
 
-          <button
-            onClick={() => setOpen(true)}
-            className="mt-3 flex items-center gap-2 text-sm font-semibold"
-          >
-            <FiMapPin />
-            {location}
-          </button>
+          <div style={{ marginTop: "5px", marginBottom: "5px" }}>
+            <button
+              onClick={() => setOpen(true)}
+              className="flex items-center gap-2 text-sm font-semibold mt-5"
+            >
+              <FiMapPin />
+              {location}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -202,9 +204,7 @@ export default function Navbar() {
 
 
                     <div
-                      className="
-                w-12 h-12
-                rounded-full
+                      className="w-12 h-12rounded-full
                 bg-pink-100
                 flex
                 items-center
@@ -298,6 +298,7 @@ export default function Navbar() {
 
         </div>
       )}
+
     </>
   );
 }

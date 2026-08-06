@@ -73,7 +73,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Backend.wsgi.application'
 
-
+AUTH_USER_MODEL = 'Account.CustomUser'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
