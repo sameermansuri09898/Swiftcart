@@ -73,6 +73,18 @@ const categories = [
     image:
       "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=300&auto=format&fit=crop",
   },
+  {
+    id: 12,
+    name: "Frozen Food",
+    image:
+      "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=300&auto=format&fit=crop",
+  },
+  {
+    id: 13,
+    name: "Frozen Food",
+    image:
+      "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=300&auto=format&fit=crop",
+  },
 ];
 
 export default function ImageCategory() {
@@ -82,7 +94,7 @@ export default function ImageCategory() {
   return (
 
     <section className="hidden md:block w-full mt-8 mb-8">
-      <div className="max-w-7xl mx-auto px-4 relative">
+      <div className="w-full mx-auto  relative">
         <Swiper
           modules={[Navigation]}
           spaceBetween={16}
@@ -99,7 +111,7 @@ export default function ImageCategory() {
             640: { slidesPerView: 5 },
             768: { slidesPerView: 6 },
             1024: { slidesPerView: 8 },
-            1280: { slidesPerView: 11 },
+            1280: { slidesPerView: 12 },
           }}
           className="w-full !py-2"
         >
