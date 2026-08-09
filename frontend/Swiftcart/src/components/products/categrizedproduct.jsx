@@ -1,149 +1,135 @@
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation } from "swiper/modules";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { ChevronRight, ChevronLeft, Plus, Star } from "lucide-react";
 
 import "swiper/css";
-import "swiper/css/navigation";
 
-const products = [
+/* ------------------------------------------------------------------ */
+/*  DATA — each category has its own array of 10+ products.            */
+/*  Replace the `image` urls with your real product image urls.        */
+/* ------------------------------------------------------------------ */
+
+const categorySections = [
   {
-    id: 1,
-    name: "Surf Excel Matic Top Load Detergent Liquid Refill | Tough Dried...",
-    image:
-      "https://cdn.zeptonow.com/production/ik-seo/tr:w-403,ar-1200-1200,pr-true,f-auto,q-40,dpr-2/cms/product_variant/df221966-8c05-4ada-8ad9-350a3f4ecabf/Surf-Excel-Matic-Top-Load-Detergent-Liquid-Refill-Tough-Dried-Stain-Removal.jpg",
-    pack: "1 pack (2 kg)",
-    price: 319,
-    mrp: 355,
-    discount: 36,
-    rating: 4.8,
-    ratingCount: "15.9k",
-    tag: null,
-    badge: "NEW PACK",
+    id: "detergents",
+    title: "Detergents, Dishwash & more",
+    products: buildProducts("Detergent", 10),
   },
   {
-    id: 2,
-    name: "Ariel Power Gel Liquid Detergent for Top load washing machine",
-    image:
-       "https://cdn.zeptonow.com/production/ik-seo/tr:w-403,ar-1200-1200,pr-true,f-auto,q-40,dpr-2/cms/product_variant/1aaed251-649d-4120-a1ac-d26cc2aceed8/Ariel-Power-Gel-Liquid-Detergent-for-Top-load-washing-machine.jpeg",
-    pack: "1 pc (950 g)",
-    price: 199,
-    mrp: 205,
-    discount: 6,
-    rating: 4.8,
-    ratingCount: "1.4k",
-    tag: null,
-    badge: null,
+    id: "snacks",
+    title: "Chips, Namkeen & Snacks",
+    products: buildProducts("Snacks", 12),
   },
   {
-    id: 3,
-    name: "Wheel Detergent Powder Power Benificial Go With Extra Pack",
-    image:
-       "https://cdn.zeptonow.com/production/ik-seo/tr:w-403,ar-2400-2400,pr-true,f-auto,q-40,dpr-2/cms/product_variant/5483b6fe-08ad-42fe-8554-0d77e903ef64/Wheel-Detergent-Powder.jpeg",
-    pack: "1 pack (4 kg)",
-    price: 258,
-    mrp: null,
-    discount: null,
-    rating: 4.7,
-    ratingCount: "20.7k",
-    tag: null,
-    badge: null,
+    id: "beverages",
+    title: "Cold Drinks & Juices",
+    products: buildProducts("Beverage", 11),
   },
   {
-    id: 4,
-    name: "Morelight Detergent Liquid | Pouch",
-    image:
-      "https://cdn.zeptonow.com/production/ik-seo/tr:w-403,ar-1500-1500,pr-true,f-auto,q-40,dpr-2/cms/product_variant/ac3bdf47-15c2-40b5-ad36-46b70b578802/Morelight-Detergent-Liquid-Pouch.jpeg",
-    pack: "1 pack (5 L)",
-    price: 396,
-    mrp: 599,
-    discount: 203,
-    rating: 5,
-    ratingCount: "7.3k",
-    tag: null,
-    badge: "5L Mega Pack",
+    id: "personal-care",
+    title: "Bath, Body & Personal Care",
+    products: buildProducts("Personal Care", 10),
   },
   {
-    id: 5,
-    name: "Modern Kitchen Butter Murukku | Crunchy & Buttery",
-    image:
-      "https://cdn.zeptonow.com/production/ik-seo/tr:w-403,ar-2250-2250,pr-true,f-auto,q-40,dpr-2/cms/product_variant/eb2e7f94-8357-4507-b1ea-f664cce86fcc/Bingo-Original-Style-Chilli-Sprinkled-Flat-Cut-Spicy-Potato-Chips-Pack-for-Snacks.jpeg",
-    pack: "1 pack (5 kg)",
-    price: 65,
-    mrp: 75,
-    discount: 10,
-    rating: 4.9,
-    ratingCount: "56.9k",
-    tag: null,
-    badge: "NEW PACK",
-  },
-  {
-    id: 6,
-    name: "Tide Naturals Lemon And Chandan Detergent Powder",
-    image:
-       "https://cdn.zeptonow.com/production/ik-seo/tr:w-403,ar-1500-1500,pr-true,f-auto,q-40,dpr-2/cms/product_variant/5de40ef8-5270-47c4-8317-0826a5ba5672/Tide-Naturals-Lemon-And-Chandan-Detergent-Powder.jpg",
-    pack: "1 pack (3 kg)",
-    price: 260,
-    mrp: null,
-    discount: null,
-    rating: 4.6,
-    ratingCount: "3.4k",
-    tag: "Super Saver Pack",
-    badge: null,
-  },
-  {
-    id: 7,
-    name: "Tide Naturals Lemon And Chandan Detergent Powder",
-    image:
-       "https://cdn.zeptonow.com/production/ik-seo/tr:w-403,ar-1200-1200,pr-true,f-auto,q-40,dpr-2/cms/product_variant/01c1fe49-4974-42ab-a384-60e41e64e57e/Pantene-Miracle-Rescue-Biotin-Strength-Conditioner.jpeg",
-    pack: "1 pack (3 kg)",
-    price: 260,
-    mrp: null,
-    discount: null,
-    rating: 4.6,
-    ratingCount: "3.4k",
-    tag: "Super Saver Pack",
-    badge: null,
-  },
-  {
-    id: 8,
-    name: "Tide Naturals Lemon And Chandan Detergent Powder",
-    image:
-       "https://cdn.zeptonow.com/production/ik-seo/tr:w-403,ar-3125-3125,pr-true,f-auto,q-40,dpr-2/cms/product_variant/d7be0405-1cfe-4170-b935-0f17573770dc/Parachute-Coconut-Oil.jpeg",
-    pack: "1 pack (3 kg)",
-    price: 260,
-    mrp: null,
-    discount: null,
-    rating: 4.6,
-    ratingCount: "3.4k",
-    tag: "Super Saver Pack",
-    badge:null,
+    id: "dairy",
+    title: "Dairy, Bread & Eggs",
+    products: buildProducts("Dairy", 10),
   },
 ];
 
-export default function ProductCardSlider({ title = "All Items" }) {
-  const prevRef = useRef(null);
-  const nextRef = useRef(null);
+/* dummy data generator so every category has 10+ items.
+   swap `image` for real product photos in production. */
+function buildProducts(label, count) {
+  const imgs = [
+    "https://images.unsplash.com/photo-1610557892470-55d587188c1e?w=300&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1583947582880-88c73f8e8d2f?w=300&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=300&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=300&auto=format&fit=crop",
+  ];
+
+  return Array.from({ length: count }, (_, i) => {
+    const hasDiscount = i % 3 !== 0;
+    const mrp = 150 + i * 25;
+    const discount = hasDiscount ? Math.round(mrp * 0.15) : null;
+
+    return {
+      id: `${label}-${i + 1}`,
+      name: `${label} product ${i + 1} | premium pack for everyday use`,
+      image: imgs[i % imgs.length],
+      pack: `1 pack (${(i % 5) + 1} ${i % 2 === 0 ? "kg" : "pc"})`,
+      price: hasDiscount ? mrp - discount : mrp,
+      mrp: hasDiscount ? mrp : null,
+      discount,
+      rating: (4 + (i % 10) / 10).toFixed(1),
+      ratingCount: `${(i + 1) * 1.2}k`,
+      tag: i % 4 === 0 ? "Super Saver Pack" : null,
+      badge: i % 5 === 0 ? "NEW PACK" : null,
+    };
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/*  PAGE — stacks a slider per category, exactly like the Zepto home   */
+/* ------------------------------------------------------------------ */
+
+export default function CategorySections() {
+  return (
+    <div className="w-full">
+      {categorySections.map((section) => (
+        <ProductSlider
+          key={section.id}
+          title={section.title}
+          products={section.products}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  REUSABLE SLIDER — one category row                                 */
+/* ------------------------------------------------------------------ */
+
+function ProductSlider({ title, products }) {
+  // hold the actual Swiper instance instead of DOM refs — calling
+  // slideNext()/slidePrev() directly on it is far more reliable than
+  // wiring prevEl/nextEl, which breaks on re-renders (the "sometimes
+  // works, sometimes doesn't" bug you were seeing).
+  const swiperRef = useRef(null);
+  const [isBeginning, setIsBeginning] = useState(true);
+  const [isEnd, setIsEnd] = useState(false);
+
+  const updateEdges = (swiper) => {
+    setIsBeginning(swiper.isBeginning);
+    setIsEnd(swiper.isEnd);
+  };
 
   return (
     <section className="w-full mt-8 mb-8">
-      <div className="max-w-full mx-auto px-4 relative">
-        <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4">
-          {title}
-        </h2>
+      <div className="max-w-7xl mx-auto px-4 relative">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg md:text-xl font-bold text-gray-900">
+            {title}
+          </h2>
+          <a
+            href="#"
+            className="text-xs md:text-sm font-semibold text-violet-600 hover:text-violet-700"
+          >
+            See all
+          </a>
+        </div>
 
         <Swiper
-          modules={[Navigation]}
+          onSwiper={(swiper) => {
+            swiperRef.current = swiper;
+            updateEdges(swiper);
+          }}
+          onSlideChange={updateEdges}
+          onReachBeginning={updateEdges}
+          onReachEnd={updateEdges}
+          onResize={updateEdges}
           spaceBetween={14}
           slidesPerView={2.2}
-          navigation={{
-            prevEl: prevRef.current,
-            nextEl: nextRef.current,
-          }}
-          onBeforeInit={(swiper) => {
-            swiper.params.navigation.prevEl = prevRef.current;
-            swiper.params.navigation.nextEl = nextRef.current;
-          }}
           breakpoints={{
             480: { slidesPerView: 3.6, spaceBetween: 14 },
             640: { slidesPerView: 4.3, spaceBetween: 16 },
@@ -162,36 +148,40 @@ export default function ProductCardSlider({ title = "All Items" }) {
 
         {/* Prev arrow */}
         <button
-          ref={prevRef}
+          type="button"
           aria-label="Previous"
-          className="
+          disabled={isBeginning}
+          onClick={() => swiperRef.current?.slidePrev()}
+          className={`
             hidden lg:flex
-            absolute top-[38%] -left-4
+            absolute top-[58%] -left-4
             w-9 h-9 items-center justify-center
             rounded-full bg-white shadow-md border border-gray-200
             text-gray-700 hover:text-violet-600 hover:border-violet-300
             transition-all duration-200
-            swiper-button-disabled:opacity-0 swiper-button-disabled:pointer-events-none
             z-10
-          "
+            ${isBeginning ? "opacity-0 pointer-events-none" : "opacity-100"}
+          `}
         >
           <ChevronLeft size={18} />
         </button>
 
         {/* Next arrow */}
         <button
-          ref={nextRef}
+          type="button"
           aria-label="Next"
-          className="
+          disabled={isEnd}
+          onClick={() => swiperRef.current?.slideNext()}
+          className={`
             hidden lg:flex
-            absolute top-[38%] -right-4
+            absolute top-[58%] -right-4
             w-9 h-9 items-center justify-center
             rounded-full bg-black shadow-md
             text-white hover:bg-violet-600
             transition-all duration-200
-            swiper-button-disabled:opacity-0 swiper-button-disabled:pointer-events-none
             z-10
-          "
+            ${isEnd ? "opacity-0 pointer-events-none" : "opacity-100"}
+          `}
         >
           <ChevronRight size={18} />
         </button>
@@ -199,6 +189,10 @@ export default function ProductCardSlider({ title = "All Items" }) {
     </section>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/*  PRODUCT CARD                                                       */
+/* ------------------------------------------------------------------ */
 
 function ProductCard({ item }) {
   return (
@@ -212,12 +206,10 @@ function ProductCard({ item }) {
         transition-all duration-300
         cursor-pointer
         overflow-hidden
-
       "
-      style={{marginBottom:"10px"}}
     >
       {/* Image area */}
-      <div className="relative w-full h-full aspect-square bg-gray-50 p-3">
+      <div className="relative w-full aspect-square bg-gray-50 p-3">
         {item.badge && (
           <span
             className="
@@ -235,8 +227,9 @@ function ProductCard({ item }) {
         <img
           src={item.image}
           alt={item.name}
+          loading="lazy"
           className="
-            w-full h-full object-cover
+            w-full h-full object-cover rounded-xl
             transition-transform duration-300
             group-hover:scale-105
           "
@@ -252,14 +245,14 @@ function ProductCard({ item }) {
             bg-white
             border border-pink-500
             text-pink-600 text-xs font-bold
-            px-3  rounded-sm
+            rounded-md
             shadow-sm
             hover:bg-pink-50
             active:scale-95
             transition-all duration-150
             cursor-pointer
           "
-          style={{padding:"3.5px"}}
+          style={{ padding: "5px 10px" }}
         >
           <Plus size={14} strokeWidth={3} />
           ADD
@@ -270,18 +263,15 @@ function ProductCard({ item }) {
       <div className="flex flex-col px-3 pb-3 pt-2 flex-1">
         {/* Price row */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          {item.discount ? (
-            <>
-              <span className="bg-green-700 text-white text-xs font-bold px-1.5 py-0.5 rounded" style={{padding:"3px"}}>
-                ₹{item.price}
-              </span>
-              <span className="text-gray-400 text-xs line-through">
-                ₹{item.mrp}
-              </span>
-            </>
-          ) : (
-            <span className="bg-green-700 text-white text-xs font-bold px-1.5 py-0.5 rounded" style={{padding:"3px"}}>
-              ₹{item.price}
+          <span
+            className="bg-green-700 text-white text-xs font-bold rounded"
+            style={{ padding: "3px 6px" }}
+          >
+            ₹{item.price}
+          </span>
+          {item.mrp && (
+            <span className="text-gray-400 text-xs line-through">
+              ₹{item.mrp}
             </span>
           )}
         </div>
