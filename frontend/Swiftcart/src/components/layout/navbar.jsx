@@ -8,6 +8,8 @@ import {
   FiX,
 } from "react-icons/fi";
 import SearchBar from "./searchbar.jsx";
+import { useNavigate } from "react-router-dom";
+ 
 
 import locationImg from "../../assets/location.png";
 export default function Navbar() {
@@ -17,6 +19,7 @@ export default function Navbar() {
   const saveLocation = () => {
     setOpen(false);
   };
+   const navigate = useNavigate();
 
   return (
     <>
@@ -27,9 +30,13 @@ export default function Navbar() {
           {/* Left */}
           <div className="flex items-center gap-5 shrink-0">
 
-            <h1 className="text-4xl font-bold text-violet-700 tracking-tight">
+            <button  onClick={() => {
+                  navigate(`/`);
+                }}>
+              <h1 className="text-4xl font-bold text-violet-700 tracking-tight">
               Swiftcart
-            </h1>
+            </h1></button>
+            
 
             <div className="hidden md:block md:flex flex-col items-center gap-1">
               <p className="font-bold text-[21px] text-gray-900">

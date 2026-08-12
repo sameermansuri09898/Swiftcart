@@ -4,8 +4,8 @@ from cloudinary.utils import cloudinary_url
 def get_pr_small_url(public_id):
     url, _ = cloudinary_url(
         public_id,
-        width=250,
-        height=250,
+        width=140,
+        height=140,
         crop="fit",
         quality="auto",
         fetch_format="auto",

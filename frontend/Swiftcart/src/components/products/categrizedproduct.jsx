@@ -1,19 +1,44 @@
+import React, { useRef, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { useRef, useState } from "react";
-import { ChevronRight, ChevronLeft, Plus, Star } from "lucide-react";
+import { ChevronRight, ChevronLeft, Plus, Star, ImageOff } from "lucide-react";
 
 import "swiper/css";
 
 /* ------------------------------------------------------------------ */
-/*  DATA — each category has its own array of 10+ products.            */
-/*  Replace the `image` urls with your real product image urls.        */
+/*  SAMPLE DATA — matches your API response structure                  */
 /* ------------------------------------------------------------------ */
+
+function buildProducts(label, count) {
+  const imgs = [
+    "https://cdn.zeptonow.com/production/ik-seo/tr:w-403,ar-1500-1500,pr-true,f-auto,q-40,dpr-2/cms/product_variant/79413751-6c51-44a4-b85a-280eb50464bf/Kurkure-Namkeen-Masala-Munch-Crunchy-Snacks.jpg",
+  ];
+
+  return Array.from({ length: count }, (_, i) => {
+    const mrp = 150 + i * 25;
+    const finalPrice = i % 3 !== 0 ? Math.round(mrp * 0.85) : mrp;
+    const isAvailable = i !== 2; // sample 1 out-of-stock item
+
+    return {
+      uuid: `${label.toLowerCase()}-${i + 1}`,
+      name: `${label} item ${i + 1} | Daily fresh & quality product`,
+      pr_small_url: imgs[0],
+      price_inr: mrp.toFixed(2),
+      final_price: finalPrice,
+      package_quantity: `${(i % 5) + 1}.00`,
+      package_unit: i % 2 === 0 ? "kg" : "g",
+      stock: isAvailable ? (i % 2 === 0 ? 3 : 20) : 0,
+      is_available: isAvailable,
+      rating: (4 + (i % 10) / 10).toFixed(1),
+      ratingCount: `${((i + 1) * 1.2).toFixed(1)}k`,
+    };
+  });
+}
 
 const categorySections = [
   {
     id: "detergents",
     title: "Detergents, Dishwash & more",
-    products: buildProducts("Detergent", 10),
+    products: buildProducts("Detergent", 12),
   },
   {
     id: "snacks",
@@ -23,63 +48,37 @@ const categorySections = [
   {
     id: "beverages",
     title: "Cold Drinks & Juices",
-    products: buildProducts("Beverage", 11),
+    products: buildProducts("Beverage", 12),
   },
   {
     id: "personal-care",
     title: "Bath, Body & Personal Care",
-    products: buildProducts("Personal Care", 10),
+    products: buildProducts("Personal Care", 12),
   },
   {
     id: "dairy",
     title: "Dairy, Bread & Eggs",
-    products: buildProducts("Dairy", 10),
+    products: buildProducts("Dairy", 12),
   },
 ];
 
-/* dummy data generator so every category has 10+ items.
-   swap `image` for real product photos in production. */
-function buildProducts(label, count) {
-  const imgs = [
-    "https://images.unsplash.com/photo-1610557892470-55d587188c1e?w=300&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1583947582880-88c73f8e8d2f?w=300&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=300&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=300&auto=format&fit=crop",
-  ];
-
-  return Array.from({ length: count }, (_, i) => {
-    const hasDiscount = i % 3 !== 0;
-    const mrp = 150 + i * 25;
-    const discount = hasDiscount ? Math.round(mrp * 0.15) : null;
-
-    return {
-      id: `${label}-${i + 1}`,
-      name: `${label} product ${i + 1} | premium pack for everyday use`,
-      image: imgs[i % imgs.length],
-      pack: `1 pack (${(i % 5) + 1} ${i % 2 === 0 ? "kg" : "pc"})`,
-      price: hasDiscount ? mrp - discount : mrp,
-      mrp: hasDiscount ? mrp : null,
-      discount,
-      rating: (4 + (i % 10) / 10).toFixed(1),
-      ratingCount: `${(i + 1) * 1.2}k`,
-      tag: i % 4 === 0 ? "Super Saver Pack" : null,
-      badge: i % 5 === 0 ? "NEW PACK" : null,
-    };
-  });
-}
-
 /* ------------------------------------------------------------------ */
-/*  PAGE — stacks a slider per category, exactly like the Zepto home   */
+/*  MAIN PAGE COMPONENT                                                */
 /* ------------------------------------------------------------------ */
 
 export default function CategorySections() {
+  const handleAddToCart = (product) => {
+    console.log("Added to cart:", product.name);
+  };
+
   return (
-    <div className="w-full">
+    <div className="w-full bg-gray-50 py-4 min-h-screen">
       {categorySections.map((section) => (
         <ProductSlider
           key={section.id}
           title={section.title}
           products={section.products}
+          onAdd={handleAddToCart}
         />
       ))}
     </div>
@@ -87,14 +86,10 @@ export default function CategorySections() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  REUSABLE SLIDER — one category row                                 */
+/*  PRODUCT SLIDER ROW                                                 */
 /* ------------------------------------------------------------------ */
 
-function ProductSlider({ title, products }) {
-  // hold the actual Swiper instance instead of DOM refs — calling
-  // slideNext()/slidePrev() directly on it is far more reliable than
-  // wiring prevEl/nextEl, which breaks on re-renders (the "sometimes
-  // works, sometimes doesn't" bug you were seeing).
+function ProductSlider({ title, products, onAdd }) {
   const swiperRef = useRef(null);
   const [isBeginning, setIsBeginning] = useState(true);
   const [isEnd, setIsEnd] = useState(false);
@@ -105,112 +100,145 @@ function ProductSlider({ title, products }) {
   };
 
   return (
-    <section className="w-full mt-8 mb-8">
-      <div className="max-w-7xl mx-auto px-4 relative">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg md:text-xl font-bold text-gray-900">
+    <section className="w-full my-6">
+      <div className="max-w-full mx-auto px-4 sm:px-6 relative">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">
             {title}
           </h2>
           <a
             href="#"
-            className="text-xs md:text-sm font-semibold text-violet-600 hover:text-violet-700"
+            className="text-xs sm:text-sm font-semibold text-violet-600 hover:text-violet-700 transition-colors"
           >
             See all
           </a>
         </div>
 
-        <Swiper
-          onSwiper={(swiper) => {
-            swiperRef.current = swiper;
-            updateEdges(swiper);
-          }}
-          onSlideChange={updateEdges}
-          onReachBeginning={updateEdges}
-          onReachEnd={updateEdges}
-          onResize={updateEdges}
-          spaceBetween={14}
-          slidesPerView={2.2}
-          breakpoints={{
-            480: { slidesPerView: 3.6, spaceBetween: 14 },
-            640: { slidesPerView: 4.3, spaceBetween: 16 },
-            768: { slidesPerView: 5.2, spaceBetween: 16 },
-            1024: { slidesPerView: 6.2, spaceBetween: 18 },
-            1280: { slidesPerView: 8, spaceBetween: 18 },
-          }}
-          className="w-full !py-2"
-        >
-          {products.map((item) => (
-            <SwiperSlide key={item.id}>
-              <ProductCard item={item} />
-            </SwiperSlide>
-          ))}
-        </Swiper>
+        {/* Slider Container with padding to avoid shadow clipping */}
+        <div className="relative px-1 -mx-1 overflow-hidden sm:overflow-visible">
+          <Swiper
+            onSwiper={(swiper) => {
+              swiperRef.current = swiper;
+              updateEdges(swiper);
+            }}
+            onSlideChange={updateEdges}
+            onReachBeginning={updateEdges}
+            onReachEnd={updateEdges}
+            onResize={updateEdges}
+            spaceBetween={12}
+            slidesPerView={2}
+            breakpoints={{
+              480: { slidesPerView: 4.5, spaceBetween: 12 },
+              640: { slidesPerView: 5.5, spaceBetween: 14 },
+              768: { slidesPerView: 6.2, spaceBetween: 16 },
+              1024: { slidesPerView: 7.2, spaceBetween: 16 },
+              1280: { slidesPerView: 9, spaceBetween: 16 },
+            }}
+            className="w-full !py-3 !px-1"
+          >
+            {products.map((item) => (
+              <SwiperSlide key={item.uuid} className="h-auto">
+                <ProductCard
+                  product={item}
+                  badge={
+                    item.stock > 0 && item.stock < 5 ? "LOW STOCK" : null
+                  }
+                  onAdd={onAdd}
+                />
+              </SwiperSlide>
+            ))}
+          </Swiper>
 
-        {/* Prev arrow */}
-        <button
-          type="button"
-          aria-label="Previous"
-          disabled={isBeginning}
-          onClick={() => swiperRef.current?.slidePrev()}
-          className={`
-            hidden lg:flex
-            absolute top-[58%] -left-4
-            w-9 h-9 items-center justify-center
-            rounded-full bg-white shadow-md border border-gray-200
-            text-gray-700 hover:text-violet-600 hover:border-violet-300
-            transition-all duration-200
-            z-10
-            ${isBeginning ? "opacity-0 pointer-events-none" : "opacity-100"}
-          `}
-        >
-          <ChevronLeft size={18} />
-        </button>
+          {/* Navigation Controls */}
+          <button
+            type="button"
+            aria-label="Previous"
+            disabled={isBeginning}
+            onClick={() => swiperRef.current?.slidePrev()}
+            className={`
+              hidden md:flex
+              absolute top-1/2 -left-4 -translate-y-1/2
+              w-9 h-9 items-center justify-center
+              rounded-full bg-white shadow-lg border border-gray-200
+              text-gray-700 hover:text-violet-600 hover:border-violet-300
+              transition-all duration-200 z-20 cursor-pointer
+              ${
+                isBeginning
+                  ? "opacity-0 pointer-events-none"
+                  : "opacity-100 hover:scale-105"
+              }
+            `}
+          >
+            <ChevronLeft size={20} />
+          </button>
 
-        {/* Next arrow */}
-        <button
-          type="button"
-          aria-label="Next"
-          disabled={isEnd}
-          onClick={() => swiperRef.current?.slideNext()}
-          className={`
-            hidden lg:flex
-            absolute top-[58%] -right-4
-            w-9 h-9 items-center justify-center
-            rounded-full bg-black shadow-md
-            text-white hover:bg-violet-600
-            transition-all duration-200
-            z-10
-            ${isEnd ? "opacity-0 pointer-events-none" : "opacity-100"}
-          `}
-        >
-          <ChevronRight size={18} />
-        </button>
+          <button
+            type="button"
+            aria-label="Next"
+            disabled={isEnd}
+            onClick={() => swiperRef.current?.slideNext()}
+            className={`
+              hidden md:flex
+              absolute top-1/2 -right-4 -translate-y-1/2
+              w-9 h-9 items-center justify-center
+              rounded-full bg-gray-900 shadow-lg
+              text-white hover:bg-violet-600
+              transition-all duration-200 z-20 cursor-pointer
+              ${
+                isEnd
+                  ? "opacity-0 pointer-events-none"
+                  : "opacity-100 hover:scale-105"
+              }
+            `}
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
       </div>
     </section>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  PRODUCT CARD                                                       */
+/*  DYNAMIC PRODUCT CARD                                                */
 /* ------------------------------------------------------------------ */
 
-function ProductCard({ item }) {
+const formatINR = (value) =>
+  Math.round(Number(value) || 0).toLocaleString("en-IN");
+
+function getPricing(product) {
+  const mrp = Number(product.price_inr) || 0;
+  const finalPrice = Number(product.final_price) || 0;
+  const hasDiscount = mrp > finalPrice;
+  const discountAmount = hasDiscount ? Math.round(mrp - finalPrice) : 0;
+
+  return {
+    mrp: hasDiscount ? formatINR(mrp) : null,
+    price: formatINR(finalPrice),
+    discountAmount: hasDiscount ? discountAmount : null,
+  };
+}
+
+function ProductCard({ product, onAdd, badge }) {
+  const [imgError, setImgError] = useState(false);
+  const { mrp, price, discountAmount } = getPricing(product);
+  const outOfStock = !product.is_available || Number(product.stock) <= 0;
+
   return (
-    <div
+    <article
       className="
-        group flex flex-col
+        group relative flex flex-col
         w-full h-full
         bg-white rounded-2xl
         border border-gray-100
         hover:shadow-lg hover:border-gray-200
         transition-all duration-300
-        cursor-pointer
-        overflow-hidden
+        overflow-visible select-none
       "
     >
-      {/* Image area */}
-      <div className="relative w-full aspect-square bg-gray-50 p-3">
-        {item.badge && (
+      {/* Image Container */}
+      <div className="relative w-full aspect-square rounded-t-2xl overflow-hidden bg-gray-50 p-3 flex items-center justify-center">
+        {badge && (
           <span
             className="
               absolute top-2 left-2 z-10
@@ -220,112 +248,138 @@ function ProductCard({ item }) {
               tracking-wide
             "
           >
-            {item.badge}
+            {badge}
           </span>
         )}
 
-        <img
-          src={item.image}
-          alt={item.name}
-          loading="lazy"
-          className="
-            w-full h-full object-cover rounded-xl
-            transition-transform duration-300
-            group-hover:scale-105
-          "
-        />
+        {!imgError && product.pr_small_url ? (
+          <img
+            src={product.pr_small_url}
+            alt={product.name || "Product"}
+            loading="lazy"
+            onError={() => setImgError(true)}
+            className={`
+              w-full h-full object-contain
+              transition-transform duration-300
+              group-hover:scale-105
+              ${outOfStock ? "opacity-40 grayscale" : ""}
+            `}
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center text-gray-400">
+            <ImageOff size={28} strokeWidth={1.5} />
+            <span className="text-[10px] mt-1">No Image</span>
+          </div>
+        )}
 
-        {/* ADD button */}
+        {outOfStock && (
+          <span
+            className="
+              absolute inset-x-0 bottom-2 z-10
+              mx-auto w-fit
+              bg-gray-900/80 text-white
+              text-[9px] font-semibold uppercase
+              px-2 py-0.5 rounded-full
+            "
+          >
+            Out of stock
+          </span>
+        )}
+
+        {/* Floating ADD Button */}
         <button
           type="button"
-          onClick={(e) => e.stopPropagation()}
-          className="
-            absolute bottom-2 right-2 z-10
+          disabled={outOfStock}
+          onClick={(e) => {
+            e.stopPropagation();
+            onAdd?.(product);
+          }}
+          className={`
+            absolute -bottom-3 right-2.5 z-20
             flex items-center gap-0.5
-            bg-white
-            border border-pink-500
-            text-pink-600 text-xs font-bold
-            rounded-md
-            shadow-sm
-            hover:bg-pink-50
-            active:scale-95
+            bg-white border
+            text-xs font-bold
+            rounded-lg shadow-md
             transition-all duration-150
-            cursor-pointer
-          "
-          style={{ padding: "5px 10px" }}
+            ${
+              outOfStock
+                ? "border-gray-200 text-gray-300 cursor-not-allowed"
+                : "border-pink-500 text-pink-600 hover:bg-pink-50 active:scale-95 cursor-pointer"
+            }
+          `}
+          style={{ padding: "5px 12px" ,marginBottom:"15px"}}
         >
-          <Plus size={14} strokeWidth={3} />
+          {!outOfStock && <Plus size={14} strokeWidth={3} />}
           ADD
         </button>
       </div>
 
-      {/* Info area */}
-      <div className="flex flex-col px-3 pb-3 pt-2 flex-1">
-        {/* Price row */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span
-            className="bg-green-700 text-white text-xs font-bold rounded"
-            style={{ padding: "3px 6px" }}
-          >
-            ₹{item.price}
-          </span>
-          {item.mrp && (
-            <span className="text-gray-400 text-xs line-through">
-              ₹{item.mrp}
+      {/* Info Container */}
+      <div className="flex flex-col px-3 pb-3 pt-4 flex-1 justify-between">
+        <div>
+          {/* Price Row */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span
+              className="bg-green-700 text-white text-xs font-bold rounded"
+              style={{ padding: "2px 6px" }}
+            >
+              ₹{price}
             </span>
+            {mrp && (
+              <span className="text-gray-400 text-xs line-through">
+                ₹{mrp}
+              </span>
+            )}
+          </div>
+
+          {/* Discount / Divider */}
+          {discountAmount ? (
+            <>
+              <span className="block text-green-600 text-[11px] font-semibold mt-1">
+                ₹{discountAmount} OFF
+              </span>
+              <div className="border-t border-dashed border-gray-200 my-1.5" />
+            </>
+          ) : (
+            <div className="h-2" />
+          )}
+
+          {/* Name */}
+          <h3
+            className="
+              text-[13px] font-semibold text-gray-900
+              leading-snug line-clamp-2
+            "
+          >
+            {product.name}
+          </h3>
+
+          {/* Pack */}
+          {product.package_quantity && (
+            <p className="text-[11px] text-gray-500 mt-1">
+              1 pack ({Number(product.package_quantity)}
+              {product.package_unit})
+            </p>
           )}
         </div>
 
-        {item.discount && (
-          <>
-            <span className="text-red-500 text-[11px] font-semibold mt-1">
-              ₹{item.discount} OFF
-            </span>
-            <div className="border-t border-dashed border-gray-200 my-1.5" />
-          </>
-        )}
-
-        {/* Name */}
-        <h3
-          className="
-            text-[13px] font-semibold text-gray-900
-            leading-snug line-clamp-2
-            mt-1
-          "
-        >
-          {item.name}
-        </h3>
-
-        {/* Pack */}
-        <p className="text-[11px] text-gray-500 mt-1.5">{item.pack}</p>
-
-        {/* Super saver tag */}
-        {item.tag && (
-          <span
-            className="
-              inline-block w-fit
-              bg-sky-50 text-sky-600
-              text-[10px] font-medium
-              px-2 py-0.5 rounded mt-1.5
-            "
-          >
-            {item.tag}
-          </span>
-        )}
-
         {/* Rating */}
-        <div className="flex items-center gap-1 mt-1.5">
-          <span className="flex items-center justify-center bg-green-700 rounded px-1 py-0.5">
-            <Star size={9} className="text-white fill-white" />
-          </span>
-          <span className="text-[11px] font-semibold text-gray-800">
-            {item.rating}
-          </span>
-          <span className="text-[11px] text-gray-400">
-            ({item.ratingCount})
-          </span>
-        </div>
+        {product.rating && (
+          <div className="flex items-center gap-1 mt-2 pt-1">
+            <span className="flex items-center justify-center bg-green-700 rounded px-1 py-0.5">
+              <Star size={9} className="text-white fill-white" />
+            </span>
+            <span className="text-[11px] font-semibold text-gray-800">
+              {product.rating}
+            </span>
+            {product.ratingCount && (
+              <span className="text-[11px] text-gray-400">
+                ({product.ratingCount})
+              </span>
+            )}
+          </div>
+        )}
       </div>
-    </div>
+    </article>
   );
 }
