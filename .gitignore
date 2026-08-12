@@ -5,7 +5,8 @@ __pycache__/
 *.pyd
 
 # Virtual Environment
-venv/
+venv_new/
+csv/
 env/
 ENV/
 .venv/
@@ -24,9 +25,6 @@ staticfiles/
 # Environment variables
 .env
 .env.*
-.sizes.csv
-.categories.csv
-.colours.csv
 # VS Code
 .vscode/
 

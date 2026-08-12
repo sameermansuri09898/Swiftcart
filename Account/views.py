@@ -4,91 +4,167 @@ from .Accountserializer import CustomUserSerializer,Loginserializer
 
 from rest_framework.generics import ListCreateAPIView
 from rest_framework import status
-from .models import Otp,BuyerShipping
+from .models import BuyerShipping
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from .utils import random_otp, send_otp_email,send_wellcome_email
+from .tasks import random_otp, send_otp_email,send_wellcome_email
 from .otpserializer import OtpSerializer,OtpResendSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from .shippingserializer import BuyerShippingSerializer
+from .utils import save_otp
 
 """
  Account Registration Login Logout and password reset, Otp verification and resend otp 
 """
 class RegisterView(APIView):
-    permission_classes = [AllowAny] 
+
+    permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = CustomUserSerializer(data=request.data)
-        if serializer.is_valid():
-            user=serializer.save()
-            otp=random_otp()
-            send_otp_email(user.email, str(otp))
-            send_wellcome_email(user.email)
-            Otp.objects.create(user=user, otp=otp, is_verified=False)
-            user.is_verified=False
-            user.save()
-            return Response({"message":"User created successfully"}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        print("CONTENT TYPE:", request.content_type)
+        print("DATA:", request.data)
+        serializer = CustomUserSerializer(
+            data=request.data
+        )
 
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user = serializer.save()
+        otp = random_otp()
+        # Redis
+        save_otp(
+            user.email,
+            otp
+        )
+        # Celery
+        send_otp_email.delay(
+            user.email,
+            str(otp)
+        )
+        send_wellcome_email.delay(
+            user.email
+        )
+
+        user.is_verified = False
+        user.save(update_fields=["is_verified"])
+
+        return Response(
+            {
+                "message": "User created successfully"
+            },
+            status=status.HTTP_201_CREATED
+        )
+    
 class OtpView(APIView):
-    permission_classes = [AllowAny]
 
+    permission_classes = [AllowAny]
     def post(self, request):
-        serializer = OtpSerializer(data=request.data)
-        if serializer.is_valid():
-            
-            return Response({ "Otp verified successfully"}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = OtpSerializer(
+            data=request.data
+        )
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return Response(
+            {
+                "message": "OTP verified successfully"
+            },
+            status=status.HTTP_200_OK
+        )
 
+
+    
 class ResendView(APIView):
-    permission_classes = [AllowAny]
-    # @rate_limit(3,60*10)
-    def post(self,request):
-        serializer = OtpResendSerializer(data=request.data)
-        if serializer.is_valid():
-            user=serializer.user
-            otp=random_otp()
-            send_otp_email(user.email, str(otp))
-            obj=Otp.objects.filter(user=user)
-            obj.delete()
-            Otp.objects.create(user=user, otp=otp, is_verified=False)
-            user.is_verified=False
-            user.save()
-            return Response({"message":"Otp sent successfully"}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    permission_classes = [AllowAny]
+    def post(self, request):
+        serializer = OtpResendSerializer(
+            data=request.data
+        )
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user = serializer.user
+
+        otp = random_otp()
+
+        # Save new OTP in Redis
+        save_otp(
+            user.email,
+            otp
+        )
+
+        # Send email asynchronously
+        send_otp_email.delay(
+            user.email,
+            str(otp)
+        )
+
+        return Response(
+            {
+                "message": "OTP sent successfully"
+            },
+            status=status.HTTP_200_OK
+        )
+
+    
 class LoginView(APIView):
     permission_classes = [AllowAny]
-    authentication_classes = [JWTAuthentication]
 
-    def post(self,request):
+    def post(self, request):
         serializer = Loginserializer(data=request.data)
-        if serializer.is_valid():
-            username=serializer.validated_data['username']
-            password=serializer.validated_data['password']
-            user=authenticate(username=username,password=password)
 
-            if user is None:
-                return Response({"message":"Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        email = serializer.validated_data["email"]
+        password = serializer.validated_data["password"]
 
-            if user.is_verified==False:
-                return Response({"message":"User is not verified"}, status=status.HTTP_401_UNAUTHORIZED)
+        user = authenticate(
+            request=request,
+            username=email,
+            password=password
+        )
 
-        
+        if user is None:
+            return Response(
+                {"message": "Invalid email or password"},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
-            if user is not None:
-                refresh = RefreshToken.for_user(user)
-                return Response({"message":"User logged in successfully","role":user.role, "access_token": str(refresh.access_token),"refresh_token": str(refresh)}, status=status.HTTP_201_CREATED)
+        if not user.is_verified:
+            return Response(
+                {"message": "User is not verified"},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
-            return Response({"message":"Invalid password"}, status=status.HTTP_401_UNAUTHORIZED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+        refresh = RefreshToken.for_user(user)
+
+        return Response(
+            {
+                "message": "User logged in successfully",
+                "role": user.role,
+                "access_token": str(refresh.access_token),
+                "refresh_token": str(refresh),
+            },
+            status=status.HTTP_200_OK
+        )  
 class Logout(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]

@@ -2,14 +2,14 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.utils import timezone
-
+from cloudinary.models import CloudinaryField
 
 class CustomUser(AbstractUser):
     mobile_number = models.CharField(max_length=15, unique=True, null=True, blank=True)
     is_verified = models.BooleanField(default=False)
     role = models.CharField( choices=[('customer', 'Customer'), ('seller', 'Seller')])
-    bio = models.TextField(blank=True)
-    profile_image = models.ImageField(upload_to='profile_images/', blank=True, null=True)
+  
+    # profile_image = CloudinaryField("profile_image", folder ="Account/Profile",blank=True)
     email = models.EmailField(unique=True)
 
     USERNAME_FIELD = 'email'
@@ -18,18 +18,6 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.email
 
-class Otp(models.Model):
-    user=models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='otp')
-    otp=models.IntegerField()
-    is_verified=models.BooleanField(default=False)
-    created_at=models.DateTimeField(auto_now_add=True)
-    
-    def __str__(self):
-        return self.user.username
-
-
-    def is_expired(self):
-        return timezone.now() > self.created_at + timezone.timedelta(minutes=10)
 
 
 class BuyerShipping(models.Model):
@@ -62,6 +50,7 @@ class BuyerShipping(models.Model):
     is_default = models.BooleanField(default=False)   # ⭐ important
 
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.full_name} - {self.city}"

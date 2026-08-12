@@ -13,6 +13,9 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 from decouple import config
 from celery.schedules import crontab
+from datetime import timedelta
+from django.conf import settings
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -26,12 +29,16 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
+    'channels',
+    "cloudinary",
+    "cloudinary_storage",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -72,7 +79,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'Backend.wsgi.application'
+ASGI_APPLICATION = 'Backend.asgi.application'
 
 AUTH_USER_MODEL = 'Account.CustomUser'
 # Database
@@ -95,7 +102,8 @@ CACHES = {
         "LOCATION": config('LOCATION'),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
+        },
+        "TIMEOUT": 300,
     },
     "otp_database": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -108,11 +116,14 @@ CACHES = {
 
 # clery Settup 
 
-CELERY_TIMEZONE = "Asia/Delhi"
-CELERY_TASK_TRACK_STARTED = True
-CELERY_BROKER_URL = config('LOCATION')
-CELERY_RESULT_BACKEND = config('LOCATION')
-CELRY_RESULT_EXTENDED = True
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+CELERY_BROKER_URL =  "redis://:pass%401234@172.18.148.63:6379/1"
+CELERY_RESULT_BACKEND = "django-db"
+CELERY_TASK_IGNORE_RESULT = False
+CELERY_RESULT_EXTENDED = True
+CELERY_TIMEZONE = "Asia/Kolkata"
 
 
 CELERY_BEAT_SCHEDULE = {
@@ -125,6 +136,43 @@ CELERY_BEAT_SCHEDULE = {
 
 
 
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [
+                {
+                    "address": "redis://172.18.148.63:6379/9",
+                    "password": "pass@1234",  # Direct password pass karein, %40 ki zarurat nahi hai
+                }
+            ],
+        },
+    },
+}
+
+# cloudinary settup
+
+CLOUDINARY_CLOUD_NAME = config("CLOUDINARY_CLOUD_NAME")
+CLOUDINARY_API_KEY = config("CLOUDINARY_API_KEY")
+CLOUDINARY_API_SECRET = config("CLOUDINARY_API_SECRET")
+
+import cloudinary
+
+# Cloudinary Python SDK
+cloudinary.config(
+    cloud_name=CLOUDINARY_CLOUD_NAME,
+    api_key=CLOUDINARY_API_KEY,
+    api_secret=CLOUDINARY_API_SECRET,
+    secure=True,
+)
+
+
+# Django Cloudinary Storage
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": CLOUDINARY_CLOUD_NAME,
+    "API_KEY": CLOUDINARY_API_KEY,
+    "API_SECRET": CLOUDINARY_API_SECRET,
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -172,11 +220,6 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-STATICFILES_DIRS = [BASE_DIR / "static"]
-STATIC_ROOT = BASE_DIR / "staticfiles"
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / "media"
-
 # Email Configuration (Gmail)
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -186,3 +229,49 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=25),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
+    "UPDATE_LAST_LOGIN": False,
+
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": settings.SECRET_KEY,
+    "VERIFYING_KEY": "",
+    "AUDIENCE": None,
+    "ISSUER": None,
+    "JSON_ENCODER": None,
+    "JWK_URL": None,
+    "LEEWAY": 0,
+
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "USER_AUTHENTICATION_RULE": "rest_framework_simplejwt.authentication.default_user_authentication_rule",
+    "ON_LOGIN_SUCCESS": "rest_framework_simplejwt.serializers.default_on_login_success",
+    "ON_LOGIN_FAILED": "rest_framework_simplejwt.serializers.default_on_login_failed",
+
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "TOKEN_TYPE_CLAIM": "token_type",
+    "TOKEN_USER_CLASS": "rest_framework_simplejwt.models.TokenUser",
+
+    "JTI_CLAIM": "jti",
+
+    "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
+    "SLIDING_TOKEN_LIFETIME": timedelta(minutes=5),
+    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
+
+    "TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainPairSerializer",
+    "TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSerializer",
+    "TOKEN_VERIFY_SERIALIZER": "rest_framework_simplejwt.serializers.TokenVerifySerializer",
+    "TOKEN_BLACKLIST_SERIALIZER": "rest_framework_simplejwt.serializers.TokenBlacklistSerializer",
+    "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
+    "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
+
+    "CHECK_REVOKE_TOKEN": False,
+    "REVOKE_TOKEN_CLAIM": "hash_password",
+    "CHECK_USER_IS_ACTIVE": True,
+}

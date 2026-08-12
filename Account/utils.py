@@ -1,35 +1,36 @@
-import random
-
-from django.core.mail import send_mail
-from django.conf import settings
+from django.core.cache import caches
 
 
-def random_otp():
-  return random.randint(1000,9999)
+OTP_EXPIRY = 60
+cache = caches["otp_database"]
+
+def get_otp_key(email):
+    return f"otp:{email.lower()}"
 
 
-def send_wellcome_email(email):
-    subject = 'Welcome to Our Website'
-    message = f'''
-    <h1>Welcome to Our Website</h1>
-    <p>Thank you for registering with us</p>
-    <p>Your account has been created successfully</p>
-    <p>Thank you</p>
-    '''
-    email_from = settings.EMAIL_HOST_USER
-    recipient_list = [email]
-    fail_silently=False
-    send_mail(subject, message, email_from, recipient_list,fail_silently=fail_silently)
+def save_otp(email, otp):
+    key = get_otp_key(email)
 
-def send_otp_email(email, otp):
-    subject = 'Your OTP for Verification'
-    message = f'''
-    <h1>Your OTP for Verification</h1>
-    <p>Your OTP is: {otp}</p>
-    <p>This OTP will expire in 10 minutes</p>
-    <p>Thank you</p>
-    '''
-    email_from = settings.EMAIL_HOST_USER
-    recipient_list = [email]
-    fail_silently=False
-    send_mail(subject, message, email_from, recipient_list,fail_silently=fail_silently)
+    cache.set(
+        key,
+        str(otp),
+        timeout=OTP_EXPIRY
+    )
+
+
+def get_otp(email):
+    key = get_otp_key(email)
+
+    return cache.get(key)
+
+
+def delete_otp(email):
+    key = get_otp_key(email)
+
+    cache.delete(key)
+
+
+def get_otp_ttl(email):
+    key = get_otp_key(email)
+
+    return cache.ttl(key)

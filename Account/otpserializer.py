@@ -1,77 +1,112 @@
-from .models import Otp, CustomUser
+from .models import  CustomUser
 from rest_framework import serializers
-from .utils import random_otp, send_otp_email
+from .tasks import random_otp, send_otp_email
 from django.utils import timezone
+from .utils import get_otp_key,get_otp_ttl,get_otp,delete_otp
 
 
 class OtpSerializer(serializers.Serializer):
-    email=serializers.EmailField()
-    otp=serializers.IntegerField()
 
-    def validate(self,attrs):
-        email=attrs.get('email')
-        otp=attrs.get('otp')
+    email = serializers.EmailField()
 
-        if not email or not otp:
-            raise serializers.ValidationError("Email and OTP are required")
+    otp = serializers.CharField(
+        max_length=6
+    )
 
-        user=CustomUser.objects.get(email=email)
-        
-        if user is None:
-            raise serializers.ValidationError("User not found")
+    def validate(self, attrs):
 
-        obj_otp=Otp.objects.filter(user=user).last() 
-        if not obj_otp:
-            raise serializers.ValidationError("Otp not found")
+        email = attrs["email"].lower()
+        otp = attrs["otp"]
 
-        if obj_otp.is_expired():
-            raise serializers.ValidationError("Otp expired")    
+        try:
+            user = CustomUser.objects.get(
+                email__iexact=email
+            )
 
-        if obj_otp.otp != otp:
-            raise serializers.ValidationError("Invalid OTP")
+        except CustomUser.DoesNotExist:
 
+            raise serializers.ValidationError(
+                {
+                    "email": "User not found."
+                }
+            )
 
-        if obj_otp.is_verified:
-            raise serializers.ValidationError("Otp already verified")
+        if user.is_verified:
 
-        if user.is_verified==True:
-            raise serializers.ValidationError("User is already verified")
+            raise serializers.ValidationError(
+                {
+                    "otp": "User is already verified."
+                }
+            )
 
-        obj_otp.is_verified=True
-        obj_otp.save()    
-        user.is_verified=True
-        user.save()    
-        return attrs   
- 
-       
+        stored_otp = get_otp(email)
 
+        if stored_otp is None:
 
+            raise serializers.ValidationError(
+                {
+                    "otp": "OTP expired or not found."
+                }
+            )
+
+        if str(stored_otp) != str(otp):
+
+            raise serializers.ValidationError(
+                {
+                    "otp": "Invalid OTP."
+                }
+            )
+
+        # OTP correct
+        user.is_verified = True
+
+        user.save(
+            update_fields=["is_verified"]
+        )
+
+        # OTP cannot be reused
+        delete_otp(email)
+
+        attrs["user"] = user
+
+        return attrs
+    
 class OtpResendSerializer(serializers.Serializer):
+
     email = serializers.EmailField()
 
     def validate_email(self, value):
+
+        email = value.lower()
+
         try:
-            user = CustomUser.objects.get(email=value)
+
+            user = CustomUser.objects.get(
+                email__iexact=email
+            )
+
         except CustomUser.DoesNotExist:
-            raise serializers.ValidationError("User not found")
 
-        # already verified → block resend
+            raise serializers.ValidationError(
+                "User not found."
+            )
+
         if user.is_verified:
-            raise serializers.ValidationError("User already verified")
 
-        # check latest OTP
-        obj_otp = Otp.objects.filter(user=user).last()
+            raise serializers.ValidationError(
+                "User is already verified."
+            )
 
-        if not obj_otp:
-            raise serializers.ValidationError("OTP not found")
+        existing_otp = get_otp(email)
 
-        time_limit = obj_otp.created_at + timezone.timedelta(seconds=60)   
-        if time_limit >= timezone.now():
-            seconds_remaining = (time_limit - timezone.now()).total_seconds()
-            raise serializers.ValidationError(f"Wait for {int(seconds_remaining)} seconds to resend OTP")   
+        if existing_otp is not None:
 
-   
+            ttl = get_otp_ttl(email)
+
+            raise serializers.ValidationError(
+                f"Please wait {ttl} seconds before requesting another OTP."
+            )
 
         self.user = user
-        return value
-        
+
+        return email
