@@ -8,7 +8,11 @@ from .cloudnary_images import (
 
 from .models import Products, Categorys
 
-
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Categorys
+        fields =["id","name",]
+        
 class ProductSerializer(serializers.ModelSerializer):
 
     category_name = serializers.CharField(

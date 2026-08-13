@@ -1,35 +1,43 @@
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
-import {
-  ShoppingBag,
-  Soup,
-  Home,
-  Panda,
-  Headphones,
-  Shirt,
-  Carrot,
-  Smartphone,
-} from "lucide-react";
-
-export default function CatSliderBottom() {
   
+export default function CatSliderBottom() {
+
+  const [cateogry,setcategroy] =useState([]);
+
   const navigate = useNavigate();
 
   const [activeCategory, setActiveCategory] = useState("All");
 
-  const category_data = [
-    { icon: <ShoppingBag />, name: "All", slug: "all" },
-    { icon: <Soup />, name: "Cafe", slug: "cafe" },
-    { icon: <Home />, name: "Home", slug: "home" },
-    { icon: <Panda />, name: "Pets", slug: "pets" },
-    { icon: <Headphones />, name: "Electronics", slug: "electronics" },
-    { icon: <Shirt />, name: "Fashion", slug: "fashion" },
-    { icon: <Carrot />, name: "Grocery", slug: "grocery" },
-    { icon: <Smartphone />, name: "Mobiles", slug: "mobiles" },
-  ];
+  
+  useEffect(()=>{
+
+    const fetchCategories = async () =>{
+      
+      try{
+      const response = await fetch("http://127.0.0.1:8000/Products/categories/");
+
+      if(!response.ok){
+        throw new error("failed to fetch response");
+        
+      }
+
+      const data = await response.json();
+      console.log(data);
+      setcategroy(data);
+      
+
+    }catch (error){
+      console.error("failed",error)
+    };
+
+    }
+    fetchCategories();
+  },[])
+
+
 
   return (
     <div className="w-full bg-white border-b border-gray-100 mt-3 mb-3 md:mt-4 md:mb-4">
@@ -46,16 +54,17 @@ export default function CatSliderBottom() {
         }}
         className="!py-3"
       >
-        {category_data.map((item, index) => {
+        {cateogry.map((item, index) => {
           const isActive = activeCategory === item.name;
 
           return (
             <SwiperSlide key={index} style={{ width: "auto" }}>
               <button
                 type="button"
+                key={item.id}
                 onClick={() => {
                   setActiveCategory(item.name);
-                  navigate(`/category/${item.slug}`);
+                  navigate(`/product?category=${item.id}`);
                 }}
                 className="group flex flex-col items-center justify-center gap-1.5 px-1 outline-none select-none cursor-pointer"
               >
@@ -72,10 +81,7 @@ export default function CatSliderBottom() {
                     }
                   `}
                 >
-                  {React.cloneElement(item.icon, {
-                    size: 22,
-                    strokeWidth: isActive ? 2.2 : 1.8,
-                  })}
+                  w
                 </span>
 
                 <span
@@ -90,7 +96,11 @@ export default function CatSliderBottom() {
                     }
                   `}
                 >
-                  {item.name}
+                  <p>
+                 {item.name.length > 10
+                  ? item.name.slice(0, 10) + "..."
+                  : item.name}
+               </p>
                 </span>
               </button>
             </SwiperSlide>

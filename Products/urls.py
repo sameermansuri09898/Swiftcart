@@ -1,6 +1,8 @@
 from django.urls import path
-from .views import BulkProductUploadView,ProductListView
+# from .views import BulkProductUploadView,ProductListView
+from .import views
 urlpatterns = [
-  path('products/bulk-upload/',BulkProductUploadView.as_view()),
-  path("products/AllCategorys/",ProductListView.as_view(),name="product-list"),
+  path('categories/',views.categoryViews.as_view(),name = 'category-list'),
+  path('products/bulk-upload/',views.BulkProductUploadView.as_view()),
+  path("products/",views.ProductListView.as_view(),name="product-list"),
 ]

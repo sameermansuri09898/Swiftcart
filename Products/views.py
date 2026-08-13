@@ -5,12 +5,13 @@ from channels.layers import get_channel_layer
 from rest_framework import status
 from rest_framework.views import APIView
 from .models import Categorys,Products,BulkImport
-from .productserializer import ProductSerializer
+from .productserializer import ProductSerializer,CategorySerializer
 import cloudinary
 from .tasks import bulk_create_products
 from rest_framework.generics import ListAPIView
 from django.core.cache import cache
-
+from .Productfilters import ProductFilter
+from django_filters.rest_framework import DjangoFilterBackend
 
 class BulkProductUploadView(APIView):
 
@@ -166,42 +167,27 @@ class BulkProductUploadView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-class ProductListView(ListAPIView):
-
-    serializer_class = ProductSerializer
+class categoryViews(ListAPIView):
+    queryset = Categorys.objects.all()
+    serializer_class = CategorySerializer
     permission_classes = [AllowAny]
 
-    def list(self, request, *args, **kwargs):
 
-        cache_key = "products:available:list"
+class ProductListView(ListAPIView):
+    serializer_class = ProductSerializer
+    permission_classes =[AllowAny]
 
-        # Redis cache check
-        cached_data = cache.get(cache_key)
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ProductFilter
 
-        if cached_data is not None:
-            return Response(cached_data)
-
-        # Database
-        queryset = (
-            Products.objects
-            .select_related("category")
-            .filter(is_available=True)
-            .order_by("-created_at")
+    def get_queryset(self):
+        return(
+            Products.objects.select_related("category")
+            .filter(is_available = True)
+            .order_by(
+                "-created_at",
+                "-id"
+            )
         )
 
-        # Serialize
-        serializer = self.get_serializer(
-            queryset,
-            many=True
-        )
-
-        data = serializer.data
-
-        # Redis mein 5 minutes
-        cache.set(
-            cache_key,
-            data,
-            timeout=300
-        )
-
-        return Response(data)
+  

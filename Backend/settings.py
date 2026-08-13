@@ -27,8 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=False)
-
+DEBUG =False
 ALLOWED_HOSTS = ["*"]
 
 
@@ -47,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
      'django_celery_results',
      "rest_framework",
+     'django_filters',
     'celery',
     'Account',
     'Products',
@@ -206,6 +206,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.AllowAny",
     ),
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
 
 # Internationalization
