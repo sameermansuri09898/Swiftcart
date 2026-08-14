@@ -2,16 +2,21 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import AllowAny,IsAuthenticated
 from channels.layers import get_channel_layer
+
 from rest_framework import status
 from rest_framework.views import APIView
 from .models import Categorys,Products,BulkImport
 from .productserializer import ProductSerializer,CategorySerializer
 import cloudinary
+
 from .tasks import bulk_create_products
 from rest_framework.generics import ListAPIView
 from django.core.cache import cache
-from .Productfilters import ProductFilter
+from .services.Productfilters import ProductFilter
 from django_filters.rest_framework import DjangoFilterBackend
+
+from .services.Pagination import ProductPagination
+
 
 class BulkProductUploadView(APIView):
 
@@ -177,6 +182,7 @@ class ProductListView(ListAPIView):
     serializer_class = ProductSerializer
     permission_classes =[AllowAny]
 
+    pagination_class = ProductPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = ProductFilter
 

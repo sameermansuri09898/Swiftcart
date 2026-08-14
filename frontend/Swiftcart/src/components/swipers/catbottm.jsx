@@ -64,7 +64,7 @@ export default function CatSliderBottom() {
                 key={item.id}
                 onClick={() => {
                   setActiveCategory(item.name);
-                  navigate(`/product?category=${item.id}`);
+                  navigate(`/product?category=${item.id}&page=1&page_size=40`);
                 }}
                 className="group flex flex-col items-center justify-center gap-1.5 px-1 outline-none select-none cursor-pointer"
               >

@@ -11,7 +11,7 @@ from django.utils import timezone
 import cloudinary.uploader
 
 from .models import Products, BulkImport
-from .utils import create_product_key
+from .services.utils import create_product_key
 
 
 User = get_user_model()

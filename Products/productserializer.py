@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .cloudnary_images import (
+from .services.cloudnary_images import (
     get_small_image,
     get_medium_image,
     get_large_image,
