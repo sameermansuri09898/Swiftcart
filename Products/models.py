@@ -16,7 +16,7 @@ class Products(models.Model):
     category = models.ForeignKey(Categorys,on_delete=models.CASCADE,related_name="products")
 
     name = models.CharField(max_length=200)
-    product_key = models.CharField()
+    product_key = models.CharField(max_length=300)
     source_url = models.URLField(
         max_length=1000,
         unique=True,

@@ -16,6 +16,7 @@ from celery.schedules import crontab
 from datetime import timedelta
 from django.conf import settings
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,8 +28,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG =False
-ALLOWED_HOSTS = ["*"]
+DEBUG =True
+# ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -51,10 +52,11 @@ INSTALLED_APPS = [
     'Account',
     'Products',
     "corsheaders",
+    "Order",
 ]
 
 MIDDLEWARE = [
-     "corsheaders.middleware.CorsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

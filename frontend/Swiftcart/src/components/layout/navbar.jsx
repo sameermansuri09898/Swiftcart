@@ -11,14 +11,15 @@ import {
 import { useNavigate } from "react-router-dom";
 import SearchBar from "./searchbar.jsx";
 import locationImg from "../../assets/location.png";
+import { useCart } from "../services/CartContext.jsx";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [location, setLocation] = useState("Select Location");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
+  const { cartCount, openCart } = useCart();
 
-  // Token verify & listener set karna
   useEffect(() => {
     const checkAuth = () => {
       const token = localStorage.getItem("access_token");
@@ -26,18 +27,14 @@ export default function Navbar() {
     };
 
     checkAuth();
-
-    // Storage event listener (agar dusre tab me login/logout ho)
     window.addEventListener("storage", checkAuth);
     return () => window.removeEventListener("storage", checkAuth);
   }, []);
 
-  // Logout Handler (Django API Request + Clears State)
   const handleLogout = async () => {
     const token = localStorage.getItem("access_token");
 
     try {
-      // Backend URL par hit karna (apna base URL adjust kar lijiye)
       await fetch("http://127.0.0.1:8000/account/logout/", {
         method: "POST",
         headers: {
@@ -48,7 +45,6 @@ export default function Navbar() {
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
-      // Tokens cleanup & local UI reset
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
       setIsLoggedIn(false);
@@ -60,7 +56,6 @@ export default function Navbar() {
     <>
       <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-6 h-20 flex items-center justify-between gap-4 md:gap-6">
-          
           <div className="flex items-center gap-6 shrink-0">
             <button
               type="button"
@@ -92,7 +87,6 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-6 md:gap-8 shrink-0">
-            {/* Conditional Login / Logout Icon */}
             {isLoggedIn ? (
               <button
                 type="button"
@@ -113,11 +107,21 @@ export default function Navbar() {
               </button>
             )}
 
+            {/* Cart trigger — opens CartDrawer, shows live count */}
             <button
               type="button"
+              onClick={openCart}
+              aria-label={`Open cart${cartCount > 0 ? `, ${cartCount} items` : ""}`}
               className="flex flex-col items-center gap-0.5 text-slate-700 hover:text-amber-600 transition-colors relative"
             >
-              <FiShoppingCart className="w-6 h-6 md:w-7 md:h-7" />
+              <span className="relative">
+                <FiShoppingCart className="w-6 h-6 md:w-7 md:h-7" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-bold leading-none">
+                    {cartCount > 99 ? "99+" : cartCount}
+                  </span>
+                )}
+              </span>
               <span className="text-xs font-semibold">Cart</span>
             </button>
           </div>

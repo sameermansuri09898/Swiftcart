@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Plus, Minus, Star, ImageOff, Heart } from "lucide-react";
+import { Plus, Minus, Star, ImageOff, Heart, Loader2 } from "lucide-react";
+import { useCart } from "../services/CartContext.jsx";
 
 /* ------------------------------------------------------------------ */
-/*  Helpers                                                           */
+/*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 const formatINR = (value) =>
   Math.round(Number(value) || 0).toLocaleString("en-IN");
@@ -25,7 +26,7 @@ function getPricing(product) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Rating Pill                                                       */
+/*  Rating Pill                                                        */
 /* ------------------------------------------------------------------ */
 function RatingPill({ rating, ratingCount }) {
   if (!rating) return null;
@@ -43,9 +44,9 @@ function RatingPill({ rating, ratingCount }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Compact Qty Stepper                                               */
+/*  Compact Qty Stepper                                                */
 /* ------------------------------------------------------------------ */
-function QtyStepper({ qty, onIncrement, onDecrement }) {
+function QtyStepper({ qty, onIncrement, onDecrement, disabled }) {
   return (
     <div
       className="flex items-center justify-between h-7 bg-emerald-600 text-white font-bold rounded-md shadow-xs px-0.5 text-xs min-w-[70px]"
@@ -58,8 +59,9 @@ function QtyStepper({ qty, onIncrement, onDecrement }) {
           e.stopPropagation();
           onDecrement();
         }}
+        disabled={disabled}
         aria-label="Decrease quantity"
-        className="flex items-center justify-center w-5 h-full rounded hover:bg-emerald-700 active:scale-90 transition-all"
+        className="flex items-center justify-center w-5 h-full rounded hover:bg-emerald-700 active:scale-90 transition-all disabled:opacity-50"
       >
         <Minus size={12} strokeWidth={2.5} />
       </button>
@@ -70,8 +72,9 @@ function QtyStepper({ qty, onIncrement, onDecrement }) {
           e.stopPropagation();
           onIncrement();
         }}
+        disabled={disabled}
         aria-label="Increase quantity"
-        className="flex items-center justify-center w-5 h-full rounded hover:bg-emerald-700 active:scale-90 transition-all"
+        className="flex items-center justify-center w-5 h-full rounded hover:bg-emerald-700 active:scale-90 transition-all disabled:opacity-50"
       >
         <Plus size={12} strokeWidth={2.5} />
       </button>
@@ -80,60 +83,54 @@ function QtyStepper({ qty, onIncrement, onDecrement }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Compact PRODUCT CARD                                              */
+/*  PRODUCT CARD — wired to the shared CartContext                     */
 /* ------------------------------------------------------------------ */
-export default function ProductCard({
-  product,
-  onAdd,
-  onIncrement,
-  onDecrement,
-  quantity,
-  badge,
-  showWishlist = true,
-  onToggleWishlist,
-  wishlisted = false,
-}) {
+export default function ProductCard({ product, badge, showWishlist = true }) {
   const [imgError, setImgError] = useState(false);
-  const [localQty, setLocalQty] = useState(0);
-  const [localWishlisted, setLocalWishlisted] = useState(wishlisted);
+  const [wishlisted, setWishlisted] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-  const isControlled = quantity !== undefined;
-  const qty = isControlled ? quantity : localQty;
+  const { getQuantityFor, getCartIdFor, addToCart, updateQuantity } = useCart();
+
+  const productKey = product?.uuid || product?.id;
+  const qty = getQuantityFor(productKey);
+  const cartId = getCartIdFor(productKey);
 
   const { mrp, price, discountAmount, discountPercent } = getPricing(product);
   const outOfStock = !product?.is_available || Number(product?.stock) <= 0;
+  const atStockLimit = qty >= Number(product?.stock || 0);
 
-  const handleAdd = (e) => {
+  const handleAdd = async (e) => {
     e.stopPropagation();
-    if (outOfStock) return;
-    onAdd?.(product);
-    if (!isControlled) setLocalQty(1);
+    if (outOfStock || busy) return;
+    setBusy(true);
+    await addToCart(product, 1);
+    setBusy(false);
   };
 
-  const handleIncrement = () => {
-    onIncrement?.(product);
-    if (!isControlled) setLocalQty((q) => q + 1);
+  const handleIncrement = async () => {
+    if (busy || atStockLimit || !cartId) return;
+    setBusy(true);
+    await updateQuantity(cartId, qty + 1);
+    setBusy(false);
   };
 
-  const handleDecrement = () => {
-    onDecrement?.(product);
-    if (!isControlled) setLocalQty((q) => Math.max(0, q - 1));
+  const handleDecrement = async () => {
+    if (busy || !cartId) return;
+    setBusy(true);
+    await updateQuantity(cartId, qty - 1);
+    setBusy(false);
   };
 
   const handleWishlistToggle = (e) => {
     e.stopPropagation();
-    onToggleWishlist?.(product);
-    setLocalWishlisted((w) => !w);
+    setWishlisted((w) => !w);
   };
 
-  const isWishlisted = onToggleWishlist ? wishlisted : localWishlisted;
-
   return (
-    <article className="group relative flex flex-col w-full h-full  bg-white rounded-xl border border-slate-200/80 hover:border-slate-300 hover:shadow-md transition-all duration-200 overflow-hidden">
-      
+    <article className="group relative flex flex-col w-full h-full bg-white rounded-xl border border-slate-200/80 hover:border-slate-300 hover:shadow-md transition-all duration-200 overflow-hidden">
       {/* Product Image Area */}
       <div className="relative w-full aspect-square bg-slate-50/50 p-2.5 flex items-center justify-center">
-        
         {/* Badges */}
         <div className="absolute top-1.5 left-1.5 z-10 flex flex-col gap-1 items-start">
           {badge && (
@@ -153,13 +150,10 @@ export default function ProductCard({
           <button
             type="button"
             onClick={handleWishlistToggle}
-            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+            aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
             className="absolute top-1.5 right-1.5 z-10 flex items-center justify-center w-6 h-6 rounded-full bg-white/90 backdrop-blur-xs border border-slate-200/80 text-slate-400 hover:text-rose-500 transition-colors"
           >
-            <Heart
-              size={12}
-              className={isWishlisted ? "fill-rose-500 text-rose-500" : ""}
-            />
+            <Heart size={12} className={wishlisted ? "fill-rose-500 text-rose-500" : ""} />
           </button>
         )}
 
@@ -190,11 +184,16 @@ export default function ProductCard({
 
         {/* Action Button (Add / Stepper) */}
         <div className="absolute bottom-1.5 right-1.5 z-20">
-          {qty > 0 ? (
+          {busy && qty === 0 ? (
+            <div className="flex items-center justify-center h-7 w-12 rounded-md border border-emerald-200 bg-white">
+              <Loader2 size={13} className="animate-spin text-emerald-600" />
+            </div>
+          ) : qty > 0 ? (
             <QtyStepper
               qty={qty}
               onIncrement={handleIncrement}
               onDecrement={handleDecrement}
+              disabled={busy}
             />
           ) : (
             <button
@@ -216,8 +215,6 @@ export default function ProductCard({
 
       {/* Info Area */}
       <div className="flex flex-col p-2.5 flex-1 justify-between gap-2">
-        
-        {/* Title & Quantity */}
         <div>
           <h3 className="text-xs font-semibold text-slate-800 leading-snug line-clamp-2 h-8 group-hover:text-amber-600 transition-colors">
             {product?.name || "Untitled product"}
@@ -230,13 +227,9 @@ export default function ProductCard({
           </p>
         </div>
 
-        {/* CSS Grid Pricing & Rating Section */}
         <div className="pt-2 border-t border-slate-100 grid grid-cols-2 items-center gap-y-0.5">
-          {/* Main Price */}
           <div className="flex items-baseline gap-1">
-            <span className="text-sm font-bold text-slate-900 leading-none">
-              ₹{price}
-            </span>
+            <span className="text-sm font-bold text-slate-900 leading-none">₹{price}</span>
             {mrp && (
               <span className="text-[10px] text-slate-400 line-through leading-none">
                 ₹{mrp}
@@ -244,7 +237,6 @@ export default function ProductCard({
             )}
           </div>
 
-          {/* Savings Tag */}
           <div className="text-right">
             {discountAmount && (
               <span className="text-[10px] font-bold text-emerald-600 leading-none">
@@ -253,19 +245,17 @@ export default function ProductCard({
             )}
           </div>
 
-          {/* Rating */}
           <div className="col-span-2 mt-1">
             <RatingPill rating={product?.rating} ratingCount={product?.ratingCount} />
           </div>
         </div>
-
       </div>
     </article>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Skeleton Component                                                */
+/*  Skeleton                                                            */
 /* ------------------------------------------------------------------ */
 export function ProductCardSkeleton() {
   return (

@@ -12,7 +12,7 @@ import {
   CheckCircle2,
   AlertCircle,
 } from "lucide-react";
-
+import { Link } from "react-router-dom";
 const API_BASE = "http://127.0.0.1:8000/account";
 
 /* ---------------------------------------------------------
@@ -407,9 +407,9 @@ export default function AuthPage() {
 
                 <p className="text-center text-sm text-slate-500 mt-6">
                   New to Swiftcart?{" "}
-                  <button type="button" className="font-semibold text-amber-600 hover:text-amber-700">
-                    Create an account
-                  </button>
+                  <Link to="/Register"className="font-semibold text-amber-600 hover:text-amber-700">
+                  Create an account
+                  </Link>
                 </p>
               </div>
             )}

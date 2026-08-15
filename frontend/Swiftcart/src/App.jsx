@@ -1,6 +1,6 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-
+import Register from "./components/credential/Registration.jsx"
 // Layouts
 import MainLayout from "./layouts/MainLayout.jsx";
 
@@ -18,6 +18,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/authentications" element={<AuthContainer />} />
           <Route path="/product" element={<Category />} />
+          <Route path="/Register" element={<Register />} />
 
           {/* Fallback route for undefined paths */}
           <Route path="*" element={<Navigate to="/" replace />} />
