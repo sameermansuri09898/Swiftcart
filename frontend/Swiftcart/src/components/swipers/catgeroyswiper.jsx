@@ -93,8 +93,8 @@ export default function ImageCategory() {
 
   return (
 
-    <section className="hidden md:block w-full mt-8 mb-8">
-      <div className="w-full mx-auto  relative">
+    <section className="hidden md:block w-full  mb-2">
+      <div className="max-w-[1440px] mx-auto px-4 lg:px-6 mx-auto  relative">
         <Swiper
           modules={[Navigation]}
           spaceBetween={16}

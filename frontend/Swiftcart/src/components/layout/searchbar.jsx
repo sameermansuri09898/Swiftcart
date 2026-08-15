@@ -2,7 +2,7 @@ import { FiSearch } from "react-icons/fi";
 
 export default function SearchBar() {
   return (
-    <div className="hidden md:flex flex-1 max-w-4xl mx-8">
+    <div className="hidden lg:flex flex-1 max-w-4xl mx-8">
   <div className="group flex items-center w-full h-14 rounded-xl border border-gray-200 bg-white transition-all duration-200 hover:border-violet-400 focus-within:border-violet-600 focus-within:ring-2 focus-within:ring-violet-100">
 
     {/* Icon Container */}

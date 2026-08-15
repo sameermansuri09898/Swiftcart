@@ -100,7 +100,7 @@ function ProductSlider({ title, products, onAdd }) {
   };
 
   return (
-    <section className="w-full my-6">
+    <section className="max-w-[1440px] mx-auto px-0.5 lg:px-2">
       <div className="max-w-full mx-auto px-4 sm:px-6 relative">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">

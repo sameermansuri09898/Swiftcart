@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FiSearch,
   FiUser,
@@ -6,306 +6,212 @@ import {
   FiMapPin,
   FiNavigation,
   FiX,
+  FiLogOut,
 } from "react-icons/fi";
-import SearchBar from "./searchbar.jsx";
 import { useNavigate } from "react-router-dom";
- 
-
+import SearchBar from "./searchbar.jsx";
 import locationImg from "../../assets/location.png";
+
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [location, setLocation] = useState("Select Location");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
 
-  const saveLocation = () => {
-    setOpen(false);
+  // Token verify & listener set karna
+  useEffect(() => {
+    const checkAuth = () => {
+      const token = localStorage.getItem("access_token");
+      setIsLoggedIn(!!token);
+    };
+
+    checkAuth();
+
+    // Storage event listener (agar dusre tab me login/logout ho)
+    window.addEventListener("storage", checkAuth);
+    return () => window.removeEventListener("storage", checkAuth);
+  }, []);
+
+  // Logout Handler (Django API Request + Clears State)
+  const handleLogout = async () => {
+    const token = localStorage.getItem("access_token");
+
+    try {
+      // Backend URL par hit karna (apna base URL adjust kar lijiye)
+      await fetch("http://127.0.0.1:8000/account/logout/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      // Tokens cleanup & local UI reset
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      setIsLoggedIn(false);
+      navigate("/authentications");
+    }
   };
-   const navigate = useNavigate();
 
   return (
     <>
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
-        <div className="max-w-[1440px] mx-auto px-4 lg:px-6 h-20 flex items-center justify-between gap-5">
+      <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
+        <div className="max-w-[1440px] mx-auto px-4 lg:px-6 h-20 flex items-center justify-between gap-4 md:gap-6">
+          
+          <div className="flex items-center gap-6 shrink-0">
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              className="text-left focus:outline-none"
+            >
+              <h1 className="text-3xl md:text-4xl font-bold text-amber-500 tracking-tight font-serif">
+                Swiftcart
+              </h1>
+            </button>
 
-          {/* Left */}
-          <div className="flex items-center gap-5 shrink-0">
-
-            <button  onClick={() => {
-                  navigate(`/`);
-                }}>
-              <h1 className="text-4xl font-bold text-violet-700 tracking-tight">
-              Swiftcart
-            </h1></button>
-            
-
-            <div className="hidden md:block md:flex flex-col items-center gap-1">
-              <p className="font-bold text-[21px] text-gray-900">
-                ⚡Delivery in minutes*
+            <div className="hidden md:flex flex-col items-start justify-center">
+              <p className="font-bold text-base lg:text-lg text-slate-900 leading-tight">
+                ⚡ Delivery in minutes*
               </p>
-
               <button
+                type="button"
                 onClick={() => setOpen(true)}
-                className="flex items-center gap-1 text-gray-600 hover:text-violet-700 font-medium"
+                className="flex items-center gap-1 text-xs lg:text-sm text-slate-600 hover:text-amber-600 font-medium transition-colors"
               >
-                <FiMapPin />
-                {location}
-
-
+                <FiMapPin className="text-amber-500 shrink-0" />
+                <span className="truncate max-w-[150px]">{location}</span>
               </button>
             </div>
           </div>
 
-          {/* Search */}
+          <div className="hidden lg:block flex-1 max-w-2xl">
+            <SearchBar />
+          </div>
 
-          <SearchBar />
+          <div className="flex items-center gap-6 md:gap-8 shrink-0">
+            {/* Conditional Login / Logout Icon */}
+            {isLoggedIn ? (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex flex-col items-center gap-0.5 text-slate-700 hover:text-rose-600 transition-colors"
+              >
+                <FiLogOut className="w-6 h-6 md:w-7 md:h-7 text-rose-500" />
+                <span className="text-xs font-semibold">Logout</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => navigate("/authentications")}
+                className="flex flex-col items-center gap-0.5 text-slate-700 hover:text-amber-600 transition-colors"
+              >
+                <FiUser className="w-6 h-6 md:w-7 md:h-7" />
+                <span className="text-xs font-semibold">Login</span>
+              </button>
+            )}
 
-          {/* Right */}
-
-          <div className="flex items-center gap-8 shrink-0">
-
-            <button className="hidden md:flex flex-col items-center">
-              <FiUser size={28} />
-              <span className="text-sm">Login</span>
-            </button>
-
-            <button className="flex flex-col items-center">
-              <FiShoppingCart size={28} />
-              <span className="text-sm">Cart</span>
+            <button
+              type="button"
+              className="flex flex-col items-center gap-0.5 text-slate-700 hover:text-amber-600 transition-colors relative"
+            >
+              <FiShoppingCart className="w-6 h-6 md:w-7 md:h-7" />
+              <span className="text-xs font-semibold">Cart</span>
             </button>
           </div>
         </div>
 
-        {/* Mobile Search */}
-
-        <div className="md:hidden px-4 pb-3">
-          <div className="group flex items-center w-full h-14 rounded-xl border border-gray-200 bg-white transition-all duration-200 hover:border-violet-400 focus-within:border-violet-600 focus-within:ring-2 focus-within:ring-violet-100">
-            <div className="flex items-center justify-center w-14 h-full">
-              <FiSearch className="text-[22px] text-gray-500" />
+        <div className="lg:hidden px-4 pb-3 pt-1 space-y-2">
+          <div className="group flex items-center w-full h-11 rounded-xl border border-slate-200 bg-slate-50 focus-within:bg-white focus-within:border-amber-500 transition-all">
+            <div className="flex items-center justify-center pl-3.5 pr-2">
+              <FiSearch className="text-lg text-slate-400" />
             </div>
-
             <input
               type="text"
-              placeholder='Search for "cheese slices"'
-              className="flex-1 h-full pr-5 bg-transparent text-[16px] text-gray-800 placeholder:text-gray-500 outline-none"
+              placeholder='Search "milk, bread, snacks"'
+              className="flex-1 h-full pr-4 bg-transparent text-sm text-slate-800 placeholder:text-slate-400 outline-none"
             />
           </div>
 
-          <div style={{ marginTop: "5px", marginBottom: "5px" }}>
-            <button
-              onClick={() => setOpen(true)}
-              className="flex items-center gap-2 text-sm font-semibold mt-5"
-            >
-              <FiMapPin />
-              {location}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-amber-600"
+          >
+            <FiMapPin className="text-amber-500" />
+            <span>{location}</span>
+          </button>
         </div>
       </header>
 
-      {/* Popup */}
-
       {open && (
-        <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm">
-
-          {/* Modal */}
-          <div
-            className="
-      bg-white 
-      w-full
-      md:w-[520px]
-      md:max-w-lg
-      rounded-t-3xl
-      md:rounded-3xl
-      overflow-hidden
-      shadow-2xl
-      animate-in
-      slide-in-from-bottom
-      duration-300
-    "
-          >
-
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 md:px-6 py-5 border-b">
-
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900">
-                Your Location
+        <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-slate-950/60 backdrop-blur-sm p-0 md:p-4">
+          <div className="bg-white w-full md:w-[500px] rounded-t-3xl md:rounded-3xl overflow-hidden shadow-2xl transition-all">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h2 className="text-lg md:text-xl font-bold text-slate-900">
+                Select Delivery Location
               </h2>
-
               <button
+                type="button"
                 onClick={() => setOpen(false)}
-                className="
-          w-9 h-9
-          flex items-center justify-center
-          rounded-full
-          hover:bg-gray-100
-          text-gray-500
-        "
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-500 transition-colors"
               >
-                <FiX size={22} />
+                <FiX size={20} />
               </button>
-
             </div>
 
-
-            {/* Body */}
-
-            <div className="p-5">
-
-
-              {/* Search Box */}
-
-              <div
-                className="
-          flex items-center
-          h-14
-          rounded-xl
-          border
-          border-gray-200
-          bg-gray-50
-          px-4
-          focus-within:border-violet-500
-          focus-within:ring-4
-          focus-within:ring-violet-100
-        "
-              >
-
-                <FiSearch
-                  className="text-gray-500 text-xl shrink-0"
-                />
-
+            <div className="p-6">
+              <div className="flex items-center h-12 rounded-xl border border-slate-200 bg-slate-50 px-3.5 focus-within:border-amber-500 focus-within:bg-white transition-all">
+                <FiSearch className="text-slate-400 text-lg shrink-0" />
                 <input
-                  placeholder="Search a new address"
-                  className="
-            ml-3
-            flex-1
-            bg-transparent
-            outline-none
-            text-sm
-            md:text-base
-          "
+                  type="text"
+                  placeholder="Search a new address or pincode"
+                  className="ml-2.5 flex-1 bg-transparent outline-none text-sm text-slate-800 placeholder:text-slate-400"
                 />
-
               </div>
 
-
-
-              {/* Current Location Card */}
-
-              <div className="mt-5 bg-gray-50 rounded-2xl p-4">
-
-
-                <div
-                  className="
-            bg-white
-            border
-            rounded-2xl
-            p-4
-            flex
-            items-center
-            justify-between
-            gap-4
-          "
-                >
-
+              <div className="mt-5 bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                <div className="bg-white border border-slate-200 rounded-xl p-3.5 flex items-center justify-between gap-3 shadow-sm">
                   <div className="flex items-center gap-3">
-
-
-                    <div
-                      className="w-12 h-12rounded-full
-                bg-pink-100
-                flex
-                items-center
-                justify-center
-                shrink-0
-              "
-                    >
-
-                      <FiNavigation
-                        size={22}
-                        className="text-pink-600"
-                      />
-
+                    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                      <FiNavigation size={18} className="text-amber-600" />
                     </div>
-
-
-
                     <div>
-
-                      <h3 className="
-                font-semibold
-                text-pink-600
-                text-sm
-                md:text-base
-              ">
+                      <h3 className="font-semibold text-slate-900 text-sm">
                         Use My Current Location
                       </h3>
-
-
-                      <p className="
-                text-xs
-                md:text-sm
-                text-gray-500
-                mt-1
-              ">
-                        Enable location for better delivery experience
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Enable location for faster checkout
                       </p>
-
-
                     </div>
-
-
                   </div>
 
-
-
                   <button
-                    className="
-              border
-              border-pink-500
-              text-pink-600
-              rounded-lg
-              px-4
-              py-2
-              text-sm
-              font-semibold
-              hover:bg-pink-50
-              transition
-            "
+                    type="button"
+                    onClick={() => {
+                      setLocation("Current Location");
+                      setOpen(false);
+                    }}
+                    className="border border-amber-500 text-amber-600 hover:bg-amber-50 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-colors shrink-0"
                   >
                     Enable
                   </button>
-
-
                 </div>
 
-
-                {/* Image */}
-
-                <div className="flex justify-center mt-8">
-
+                <div className="flex justify-center mt-6">
                   <img
                     src={locationImg}
-                    alt="location"
-                    className="
-              w-48
-              md:w-64
-              object-contain
-            "
+                    alt="location visual"
+                    className="w-40 md:w-48 object-contain"
                   />
-
                 </div>
-
-
               </div>
-
-
             </div>
-
           </div>
-
         </div>
       )}
-
     </>
   );
 }

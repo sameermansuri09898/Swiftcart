@@ -1,232 +1,255 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import ProductSkeleton from "../components/layout/ProductSkeleton"
+
 import ProductCard from "../components/products/ProductCard";
+import ProductSkeleton from "../components/layout/ProductSkeleton";
+import Pagination from "../components/common/pagination";
 
 
 export default function ProductGridDemo() {
 
-  // URL:
-  // /product?category=3
-  //
-  // categoryId = "3"
+    const [searchParams] = useSearchParams();
 
-  const [searchParams] = useSearchParams();
+    const categoryId =
+        searchParams.get("category");
 
-  const categoryId =searchParams.get("category");
-  const page = searchParams.get("page");
-  const page_size = searchParams.get("page_size");
+    const page =
+        Number(searchParams.get("page")) || 1;
 
-  const [products, setProducts] =
-    useState([]);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [error, setError] =
-    useState(null);
+    const pageSize =
+        Number(searchParams.get("page_size")) || 40;
 
 
-  useEffect(() => {
+    const [products, setProducts] =
+        useState([]);
 
-    // Category nahi hai to API call mat karo
+    const [pagination, setPagination] =
+        useState({
+            count: 0,
+            totalPages: 0,
+            currentPage: 1,
+            pageSize: pageSize,
+            next: null,
+            previous: null,
+        });
 
-    if (!categoryId&&page&&page_size) {
-      return;
-    }
+    const [loading, setLoading] =
+        useState(true);
 
-
-    const fetchProducts = async () => {
-
-      try {
-
-        setLoading(true);
-        setError(null);
-
-
-        const response = await fetch(
-          `http://127.0.0.1:8000/Products/products/?category=${categoryId}&page=${page}&page_size=${page_size}`
-        );
+    const [error, setError] =
+        useState(null);
 
 
-        if (!response.ok) {
+    useEffect(() => {
 
-          throw new Error(
-            `HTTP error! status: ${response.status}`
-          );
-
+        if (!categoryId) {
+            return;
         }
 
 
-        const data =
-          await response.json();
-          console.log(data.count)
+        const fetchProducts = async () => {
+
+            try {
+
+                setLoading(true);
+                setError(null);
 
 
-
-        // DRF pagination support
-
-        const productList =
-          Array.isArray(data)
-            ? data
-            : data.results || [];
-
-        console.log(productList)    
+                const url =
+                    `http://127.0.0.1:8000/Products/products/` +
+                    `?category=${categoryId}` +
+                    `&page=${page}` +
+                    `&page_size=${pageSize}`;
 
 
-        setProducts(
-          productList
+                const response =
+                    await fetch(url);
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        `HTTP error: ${response.status}`
+                    );
+
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                setProducts(
+                    data.results || []
+                );
+
+
+                setPagination({
+
+                    count: data.count,
+
+                    totalPages:
+                        data.total_pages,
+
+                    currentPage:
+                        data.current_page,
+
+                    pageSize:
+                        data.page_size,
+
+                    next:
+                        data.next,
+
+                    previous:
+                        data.previous,
+
+                });
+
+
+            } catch (err) {
+
+                console.error(
+                    "Products fetch error:",
+                    err
+                );
+
+                setError(
+                    "Failed to load products."
+                );
+
+            } finally {
+
+                setLoading(false);
+
+            }
+
+        };
+
+
+        fetchProducts();
+
+    }, [
+        categoryId,
+        page,
+        pageSize
+    ]);
+
+
+    const handleAdd = (product) => {
+
+        console.log(
+            "Added to cart:",
+            product.name
         );
-
-
-      } catch (err) {
-
-        console.error(
-          "Error fetching products:",
-          err
-        );
-
-        setError(
-          "slkeleton."
-        );
-
-
-      } finally {
-
-        setLoading(false);
-
-      }
 
     };
 
 
-    fetchProducts();
+    if (loading) {
 
-  }, [categoryId,page,page_size]);
+        return (
 
+            <div className="min-h-screen bg-gray-50 p-6">
 
-  const handleAdd = (product) => {
-
-    console.log(
-      "Added to cart:",
-      product.name
-    );
-
-  };
-
-
-  if (loading) {
-
-    return (
-        <div
-            className="
-                min-h-screen
-                bg-gray-50
-                px-3
-                py-6
-                sm:px-5
-                md:px-8
-                lg:px-10
-            "
-        >
-
-            <div
-                className="
-                    mx-auto
-                    w-full
-                    max-w-full
+                <div className="
                     grid
                     grid-cols-2
-                    gap-x-3
-                    gap-y-8
                     sm:grid-cols-3
-                    sm:gap-x-4
                     md:grid-cols-7
                     lg:grid-cols-8
                     xl:grid-cols-10
-                "
-            >
+                    gap-x-3
+                    gap-y-8
+                ">
 
-                <ProductSkeleton count={20} />
+                    <ProductSkeleton count={20} />
+
+                </div>
 
             </div>
 
-        </div>
-    );
-}
+        );
+
+    }
 
 
-  if (error) {
+    if (error) {
+
+        return (
+
+            <div className="
+                min-h-screen
+                flex
+                items-center
+                justify-center
+                text-red-500
+            ">
+
+                {error}
+
+            </div>
+
+        );
+
+    }
+
 
     return (
-      <div className="flex min-h-screen items-center  justify-center bg-gray-50 ">
 
-        <p className="
-          text-base
-          font-medium
-          text-red-500
+        <div className="
+            min-h-screen
+            bg-gray-50
+            px-0.5
+            py-6
+            sm:px-5
+            md:px-8
+            lg:px-20
         ">
-          {error}
-        </p>
-
-      </div>
-    );
-
-  }
 
 
-  return (
+            <div className="
+                grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 2xl:grid-cols-8 gap-3 sm:gap-4
+            ">
 
-    <div className="
-      min-h-screen
-      bg-gray-50
-      px-3
-      py-6
-      sm:px-5
-      md:px-8
-      lg:px-10
-    ">
+                {products.map((product) => (
 
-      <div className="
-        mx-auto
-        w-full
-        max-w-full
-        grid
-        grid-cols-2
-        gap-x-3
-        gap-y-8
-        sm:grid-cols-3
-        sm:gap-x-4
-        md:grid-cols-7
-        lg:grid-cols-8
-        xl:grid-cols-10
-      ">
+                    <ProductCard
+                        key={product.uuid}
+                        product={product}
+                        badge={
+                            product.stock > 0 &&
+                            product.stock < 5
+                                ? "LOW STOCK"
+                                : null
+                        }
+                        onAdd={handleAdd}
+                    />
 
-        {products.map((product) => (
+                ))}
 
-          <ProductCard
+            </div>
 
-            key={product.uuid}
 
-            product={product}
+           {pagination.totalPages > 1 && (
+  <footer className="mt-8 pt-6 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4 px-2">
+    {/* Product Count Info */}
+    <p className="text-xs text-slate-500 font-medium order-2 sm:order-1 text-center sm:text-left">
+      Showing page <span className="font-semibold text-slate-800">{pagination.currentPage}</span> of{" "}
+      <span className="font-semibold text-slate-800">{pagination.totalPages}</span>
+    </p>
 
-            badge={
-              product.stock > 0 &&
-              product.stock < 5
-                ? "LOW STOCK"
-                : null
-            }
-
-            onAdd={handleAdd}
-
-          />
-
-        ))}
-
-      </div>
-
+    {/* Pagination Wrapper */}
+    <div className="order-1 sm:order-2 w-full sm:w-auto flex justify-center overflow-x-auto pb-1 sm:pb-0">
+      <Pagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+      />
     </div>
+  </footer>
+)}
 
-  );
+        </div>
+
+    );
 
 }

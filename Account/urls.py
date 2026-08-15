@@ -16,7 +16,7 @@ urlpatterns = [
     path('Account/Registration/',RegisterView.as_view(),name='register'),
     path('login/',LoginView.as_view(),name='login'),
     path('resend-otp/',ResendView.as_view(),name='resend_otp'),
-    path('otp/',OtpView.as_view(),name='otp'),
+    path('verify-otp/',OtpView.as_view(),name='verify-otp'),
     path('logout/',Logout.as_view(),name='logout'),
     path(
         "test/",
