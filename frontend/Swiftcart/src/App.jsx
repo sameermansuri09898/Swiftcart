@@ -8,6 +8,7 @@ import MainLayout from "./layouts/MainLayout.jsx";
 import Home from "./pages/Home.jsx";
 import Category from "./pages/Category.jsx";
 import AuthContainer from "./components/credential/loginfun.jsx";
+import Address from "./pages/Address.jsx";
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
           <Route path="/authentications" element={<AuthContainer />} />
           <Route path="/product" element={<Category />} />
           <Route path="/Register" element={<Register />} />
+          <Route path="/address" element={<Address />}/>
 
           {/* Fallback route for undefined paths */}
           <Route path="*" element={<Navigate to="/" replace />} />

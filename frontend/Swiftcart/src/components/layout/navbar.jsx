@@ -204,6 +204,36 @@ export default function Navbar() {
                   </button>
                 </div>
 
+                {/* form add settup */}
+
+                <div className="bg-white border border-slate-200 rounded-xl p-3.5 flex items-center justify-between gap-3 shadow-sm mt-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                      <FiNavigation size={18} className="text-amber-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 text-sm">
+                        Set Formal Location
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Use Formal location for faster checkout
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLocation("Current Location");
+                      setOpen(false);
+                      navigate('/address')
+                    }}
+                    className="border border-amber-500 text-amber-600 hover:bg-amber-50 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-colors shrink-0"
+                  >
+                    Set-Now
+                  </button>
+                </div>
+
                 <div className="flex justify-center mt-6">
                   <img
                     src={locationImg}

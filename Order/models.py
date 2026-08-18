@@ -21,3 +21,6 @@ class AddToCart(models.Model):
         self.product.final_price() * self.quantity,
         2
     )
+
+class Order(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="order_items") 

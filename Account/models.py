@@ -46,6 +46,8 @@ class BuyerShipping(models.Model):
     zip_code = models.CharField(max_length=10)
 
     address_type = models.CharField(max_length=10, choices=ADDRESS_TYPE, default='home')
+    latitude = models.DecimalField(max_digits=10, decimal_places=8, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=11, decimal_places=8, null=True, blank=True)
 
     is_default = models.BooleanField(default=False)   # ⭐ important
 

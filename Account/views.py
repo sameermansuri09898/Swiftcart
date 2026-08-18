@@ -192,6 +192,7 @@ class ShippingAddressCreate(APIView):
             data=request.data,
             context={'request': request}
         )
+        print(serializer)
 
         if serializer.is_valid():
             serializer.save()
@@ -213,6 +214,7 @@ class ShippingAddressList(APIView):
     authentication_classes = [JWTAuthentication]
 
     def get(self, request):
+        print(request.user)
 
         addresses = BuyerShipping.objects.filter(
             user=request.user
@@ -220,6 +222,7 @@ class ShippingAddressList(APIView):
             '-is_default',
             '-created_at'
         )
+
 
         serializer = BuyerShippingSerializer(
             addresses,
