@@ -1,16 +1,16 @@
-import { useEffect, useState } from "react";
-import AddressForm from "../components/credential/addform";
-import AddressCard from "../addcard";
-
+import React, { useEffect, useState } from "react";
+import { Plus } from "lucide-react";
+import AddressCard from "./addcard"
+import AddressForm from "../credential/addform";
 import {
   getAddresses,
   deleteAddress,
   setDefaultAddress,
   updateAddress,
-  createAddress
-} from "../components/services/addservices";
+  createAddress,
+} from "../services/addservices";
 
-export default function Address() {
+export default function AddressSection() {
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -22,9 +22,8 @@ export default function Address() {
       setLoading(true);
       setErrorMessage("");
       const data = await getAddresses();
-      
       const list = Array.isArray(data) ? data : data?.results || [];
-      setAddresses([...list]); // Enforce new array reference for re-render
+      setAddresses([...list]);
     } catch (err) {
       console.error(err);
       setErrorMessage("Addresses load nahi ho paaye. Kripya login check karein.");
@@ -41,7 +40,6 @@ export default function Address() {
     if (!window.confirm("Kya aap is address ko delete karna chahte hain?")) return;
     try {
       await deleteAddress(id);
-      // Local state Instant update
       setAddresses((prev) => prev.filter((a) => a.id !== id));
     } catch (err) {
       console.error(err);
@@ -51,7 +49,6 @@ export default function Address() {
   const handleDefault = async (id) => {
     try {
       await setDefaultAddress(id);
-      // Re-fetch instantly updates state
       await fetchAddresses();
     } catch (err) {
       console.error(err);
@@ -73,24 +70,16 @@ export default function Address() {
     setEditingAddress(null);
   };
 
-  // FIXED SAVE FUNCTION
   const handleSave = async (formData) => {
     try {
       setLoading(true);
-      
       if (editingAddress) {
-        // UPDATE
         await updateAddress(editingAddress.id, formData);
       } else {
-        // CREATE
         await createAddress(formData);
       }
-
-      // 1. Close form immediately
       setShowForm(false);
       setEditingAddress(null);
-
-      // 2. Refresh data from server to force re-render
       await fetchAddresses();
     } catch (err) {
       console.error("Save Error:", err);
@@ -100,7 +89,7 @@ export default function Address() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto py-8 px-4 font-sans">
+    <div className="space-y-6">
       {showForm ? (
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-md">
           <div className="flex justify-between items-center mb-6 border-b pb-4">
@@ -131,9 +120,9 @@ export default function Address() {
 
             <button
               onClick={handleAdd}
-              className="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition shadow-sm"
+              className="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition shadow-sm flex items-center gap-1.5"
             >
-              + Add New Address
+              <Plus size={16} /> Add New Address
             </button>
           </div>
 

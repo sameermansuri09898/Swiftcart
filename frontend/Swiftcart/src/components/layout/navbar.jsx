@@ -88,15 +88,17 @@ export default function Navbar() {
 
           <div className="flex items-center gap-6 md:gap-8 shrink-0">
             {isLoggedIn ? (
+              /* USER LOGGED IN: Account Dashboard par redirect hoga */
               <button
                 type="button"
-                onClick={handleLogout}
-                className="flex flex-col items-center gap-0.5 text-slate-700 hover:text-rose-600 transition-colors"
+                onClick={() => navigate("/UserDashboard")}
+                className="flex flex-col items-center gap-0.5 text-slate-700 hover:text-indigo-600 transition-colors"
               >
-                <FiLogOut className="w-6 h-6 md:w-7 md:h-7 text-rose-500" />
-                <span className="text-xs font-semibold">Logout</span>
+                <FiUser className="w-6 h-6 md:w-7 md:h-7 text-indigo-600" />
+                <span className="text-xs font-semibold">Account</span>
               </button>
             ) : (
+              /* USER NOT LOGGED IN: Login / Register page par redirect hoga */
               <button
                 type="button"
                 onClick={() => navigate("/authentications")}

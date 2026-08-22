@@ -1,15 +1,13 @@
 import axios from "axios";
 
-// Base URL setup (Aapke Django backend port ke hisab se update karein)
-const API_BASE_URL = "http://127.0.0.1:8000/account"; 
+const API_BASE_URL = "http://127.0.0.1:8000/account";
 
-// Token retrieve karne ka helper
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token") || localStorage.getItem("access_token");
   return {
     headers: {
       "Content-Type": "application/json",
-      Authorization: token ? `Bearer ${token}` : "", // ya `Token ${token}` agar DRF TokenAuth use ho raha ho
+      Authorization: token ? `Bearer ${token}` : "",
     },
   };
 };

@@ -1,8 +1,19 @@
-import { Pencil, Trash2, MapPin, Home, Briefcase, MoreHorizontal, Star, Phone, User } from "lucide-react";
+import React from "react";
+import {
+  Pencil,
+  Trash2,
+  MapPin,
+  Home,
+  Briefcase,
+  MoreHorizontal,
+  Star,
+  Phone,
+  User,
+} from "lucide-react";
 
 const TYPE_CONFIG = {
-  home:  { icon: Home, label: "Home", color: "text-violet-600 bg-violet-50 border-violet-100" },
-  work:  { icon: Briefcase, label: "Work", color: "text-sky-600 bg-sky-50 border-sky-100" },
+  home: { icon: Home, label: "Home", color: "text-violet-600 bg-violet-50 border-violet-100" },
+  work: { icon: Briefcase, label: "Work", color: "text-sky-600 bg-sky-50 border-sky-100" },
   other: { icon: MoreHorizontal, label: "Other", color: "text-slate-600 bg-slate-50 border-slate-200" },
 };
 
@@ -25,7 +36,9 @@ export default function AddressCard({ address, onEdit, onDelete, onDefault }) {
       {/* CARD BODY */}
       <div className="p-5 flex flex-col gap-4 flex-1">
         <div className="flex items-center justify-between">
-          <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg border ${type.color}`}>
+          <span
+            className={`inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg border ${type.color}`}
+          >
             <TypeIcon size={11} />
             {type.label}
           </span>

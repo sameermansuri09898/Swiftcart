@@ -10,7 +10,7 @@ from .productserializer import ProductSerializer,CategorySerializer
 import cloudinary
 
 from .tasks import bulk_create_products
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView,RetrieveAPIView
 from django.core.cache import cache
 from .services.Productfilters import ProductFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -196,4 +196,10 @@ class ProductListView(ListAPIView):
             )
         )
 
+class ProductDetail(RetrieveAPIView):
+    queryset = Products.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [AllowAny]
+    lookup_field = "slug"
+    lookup_url_kwarg ="Detail_slug"
   

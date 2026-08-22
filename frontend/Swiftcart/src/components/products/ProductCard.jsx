@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Plus, Minus, Star, ImageOff, Heart, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom"; // 1. useNavigate Import Kiya
 import { useCart } from "../services/CartContext.jsx";
 
 /* ------------------------------------------------------------------ */
@@ -44,7 +45,7 @@ function RatingPill({ rating, ratingCount }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Compact Qty Stepper                                                */
+/*  Compact Qty Stepper                                               */
 /* ------------------------------------------------------------------ */
 function QtyStepper({ qty, onIncrement, onDecrement, disabled }) {
   return (
@@ -52,6 +53,7 @@ function QtyStepper({ qty, onIncrement, onDecrement, disabled }) {
       className="flex items-center justify-between h-7 bg-emerald-600 text-white font-bold rounded-md shadow-xs px-0.5 text-xs min-w-[70px]"
       role="group"
       aria-label="Quantity"
+      onClick={(e) => e.stopPropagation()} // Stop navigation when clicking stepper container
     >
       <button
         type="button"
@@ -83,9 +85,10 @@ function QtyStepper({ qty, onIncrement, onDecrement, disabled }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  PRODUCT CARD — wired to the shared CartContext                     */
+/*  PRODUCT CARD — wired to the shared CartContext                    */
 /* ------------------------------------------------------------------ */
 export default function ProductCard({ product, badge, showWishlist = true }) {
+  const navigate = useNavigate(); // 2. Navigation Hook Initialize Kiya
   const [imgError, setImgError] = useState(false);
   const [wishlisted, setWishlisted] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -100,8 +103,15 @@ export default function ProductCard({ product, badge, showWishlist = true }) {
   const outOfStock = !product?.is_available || Number(product?.stock) <= 0;
   const atStockLimit = qty >= Number(product?.stock || 0);
 
+  // 3. Card Click Handler (Navigates to detail page using product.slug)
+  const handleCardClick = () => {
+    if (product?.slug) {
+      navigate(`/ProductDetail/${product.slug}/`);
+    }
+  };
+
   const handleAdd = async (e) => {
-    e.stopPropagation();
+    e.stopPropagation(); // Stop card click
     if (outOfStock || busy) return;
     setBusy(true);
     await addToCart(product, 1);
@@ -123,12 +133,15 @@ export default function ProductCard({ product, badge, showWishlist = true }) {
   };
 
   const handleWishlistToggle = (e) => {
-    e.stopPropagation();
+    e.stopPropagation(); // Stop card click
     setWishlisted((w) => !w);
   };
 
   return (
-    <article className="group relative flex flex-col w-full h-full bg-white rounded-xl border border-slate-200/80 hover:border-slate-300 hover:shadow-md transition-all duration-200 overflow-hidden">
+    <article
+      onClick={handleCardClick} // 4. Click event added to root card
+      className="group relative flex flex-col w-full h-full bg-white rounded-xl border border-slate-200/80 hover:border-slate-300 hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer"
+    >
       {/* Product Image Area */}
       <div className="relative w-full aspect-square bg-slate-50/50 p-2.5 flex items-center justify-center">
         {/* Badges */}
@@ -183,7 +196,10 @@ export default function ProductCard({ product, badge, showWishlist = true }) {
         )}
 
         {/* Action Button (Add / Stepper) */}
-        <div className="absolute bottom-1.5 right-1.5 z-20">
+        <div
+          className="absolute bottom-1.5 right-1.5 z-20"
+          onClick={(e) => e.stopPropagation()} // Stop navigation when clicking action area
+        >
           {busy && qty === 0 ? (
             <div className="flex items-center justify-center h-7 w-12 rounded-md border border-emerald-200 bg-white">
               <Loader2 size={13} className="animate-spin text-emerald-600" />
@@ -255,7 +271,7 @@ export default function ProductCard({ product, badge, showWishlist = true }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Skeleton                                                            */
+/*  Skeleton                                                          */
 /* ------------------------------------------------------------------ */
 export function ProductCardSkeleton() {
   return (

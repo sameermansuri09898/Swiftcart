@@ -5,4 +5,5 @@ urlpatterns = [
   path('categories/',views.categoryViews.as_view(),name = 'category-list'),
   path('products/bulk-upload/',views.BulkProductUploadView.as_view()),
   path("products/",views.ProductListView.as_view(),name="product-list"),
+  path("ProductDetail/<slug:Detail_slug>/",views.ProductDetail.as_view(),name="ProductDetail-list"),
 ]

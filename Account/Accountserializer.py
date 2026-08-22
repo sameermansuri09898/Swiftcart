@@ -2,11 +2,15 @@
 from rest_framework import serializers
 from .models import CustomUser
 import re
+from Products.services.cloudnary_images import get_pr_small_url
+
+
 class CustomUserSerializer(serializers.ModelSerializer):
 
     confirm_password = serializers.CharField(
         write_only=True
     )
+    pr_small_url = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
@@ -19,6 +23,8 @@ class CustomUserSerializer(serializers.ModelSerializer):
             "confirm_password",
             "mobile_number",
             "role",
+            "profile_image",
+            "pr_small_url",
         ]
 
         extra_kwargs = {
@@ -31,6 +37,9 @@ class CustomUserSerializer(serializers.ModelSerializer):
     # Object-level validation
     # -------------------------
 
+    def get_pr_small_url(self, obj):
+            return get_pr_small_url(obj.profile_image.public_id)
+    
     def validate(self, attrs):
 
         if attrs["password"] != attrs["confirm_password"]:

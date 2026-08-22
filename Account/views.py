@@ -26,8 +26,7 @@ class RegisterView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        print("CONTENT TYPE:", request.content_type)
-        print("DATA:", request.data)
+      
         serializer = CustomUserSerializer(
             data=request.data
         )
@@ -63,7 +62,16 @@ class RegisterView(APIView):
             },
             status=status.HTTP_201_CREATED
         )
-    
+class Profile(APIView):
+
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self,request):
+        serializer = CustomUserSerializer(request.user)
+        return Response(serializer.data)
+
+
 class OtpView(APIView):
 
     permission_classes = [AllowAny]
@@ -165,6 +173,9 @@ class LoginView(APIView):
             },
             status=status.HTTP_200_OK
         )  
+
+
+        
 class Logout(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]

@@ -9,7 +9,7 @@ class CustomUser(AbstractUser):
     is_verified = models.BooleanField(default=False)
     role = models.CharField( choices=[('customer', 'Customer'), ('seller', 'Seller')])
   
-    # profile_image = CloudinaryField("profile_image", folder ="Account/Profile",blank=True)
+    profile_image = CloudinaryField("profile_image", folder ="Account/Profile",blank=True)
     email = models.EmailField(unique=True)
 
     USERNAME_FIELD = 'email'

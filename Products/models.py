@@ -29,7 +29,6 @@ class Products(models.Model):
         editable=False,
         unique=True
     )
-
     slug = models.SlugField(
         unique=True,
         blank=True,

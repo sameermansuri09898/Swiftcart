@@ -9,6 +9,7 @@ import {
   FiEye,
   FiEyeOff,
   FiAlertCircle,
+  FiCamera,
 } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 
@@ -17,6 +18,7 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [imagePreview, setImagePreview] = useState(null);
 
   const [formData, setFormData] = useState({
     username: "",
@@ -24,19 +26,34 @@ export default function Register() {
     password: "",
     confirm_password: "",
     mobile_number: "",
-    role: "customer", // Default role
+    role: "customer",
+    profile_image: null,
   });
 
+  // Handle standard input changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError(""); // Clear error on typing
+    setError("");
+  };
+
+  // Handle image file selection & preview
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Image size should be less than 5MB");
+        return;
+      }
+      setFormData({ ...formData, profile_image: file });
+      setImagePreview(URL.createObjectURL(file));
+      setError("");
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    // Front-end validation
     if (formData.password !== formData.confirm_password) {
       setError("Passwords do not match!");
       return;
@@ -44,27 +61,34 @@ export default function Register() {
 
     setLoading(true);
 
+    // Create FormData for multipart file upload
+    const payload = new FormData();
+    payload.append("username", formData.username);
+    payload.append("email", formData.email);
+    payload.append("password", formData.password);
+    payload.append("confirm_password", formData.confirm_password);
+    payload.append("mobile_number", formData.mobile_number);
+    payload.append("role", formData.role);
+    if (formData.profile_image) {
+      payload.append("profile_image", formData.profile_image);
+    }
+
     try {
       const response = await fetch(
         "http://127.0.0.1:8000/account/Account/Registration/",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
+          body: payload, // Browser automatically sets 'multipart/form-data' header
         }
       );
 
       const data = await response.json();
 
       if (response.ok || response.status === 201) {
-        // Direct redirect to login page after successful registration
         navigate("/authentications", {
           state: { message: "Account created successfully! Please login." },
         });
       } else {
-        // Display backend validation errors
         if (typeof data === "object") {
           const firstErrorKey = Object.keys(data)[0];
           const firstErrorMsg = Array.isArray(data[firstErrorKey])
@@ -82,7 +106,6 @@ export default function Register() {
     }
   };
 
-  // Google OAuth Login Trigger
   const handleGoogleLogin = () => {
     window.location.href = "http://127.0.0.1:8000/account/google/login/";
   };
@@ -131,6 +154,31 @@ export default function Register() {
 
         {/* Registration Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Profile Image Picker */}
+          <div className="flex flex-col items-center justify-center mb-2">
+            <div className="relative w-20 h-20 rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center bg-slate-50 overflow-hidden group">
+              {imagePreview ? (
+                <img
+                  src={imagePreview}
+                  alt="Profile Preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <FiCamera className="text-slate-400 text-2xl group-hover:scale-110 transition-transform" />
+              )}
+              <input
+                type="file"
+                name="profile_image"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+              />
+            </div>
+            <span className="text-[11px] text-slate-500 mt-1.5 font-medium">
+              Upload Profile Picture (Optional)
+            </span>
+          </div>
+
           {/* Username */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
