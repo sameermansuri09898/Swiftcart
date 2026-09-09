@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'Products',
     "corsheaders",
     "Order",
+    "Delivery",
 ]
 
 MIDDLEWARE = [

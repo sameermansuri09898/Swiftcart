@@ -14,7 +14,6 @@ class Products(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
     category = models.ForeignKey(Categorys,on_delete=models.CASCADE,related_name="products")
-
     name = models.CharField(max_length=200)
     product_key = models.CharField(max_length=300)
     source_url = models.URLField(
@@ -94,6 +93,14 @@ class Products(models.Model):
     # Finally save
      super().save(*args, **kwargs)
 
+class ShopLocation(models.Model):
+    name = models.CharField(max_length=200)
+    address = models.TextField()
+    latitude = models.DecimalField(max_digits=10, decimal_places=8)
+    longitude = models.DecimalField(max_digits=11, decimal_places=8)
+
+    def __str__(self):
+        return self.name
 
 class BulkImport(models.Model):
 

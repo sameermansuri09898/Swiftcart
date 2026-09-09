@@ -35,3 +35,17 @@ def send_otp_email(email, otp):
     recipient_list = [email]
     fail_silently=False
     send_mail(subject, message, email_from, recipient_list,fail_silently=fail_silently)
+
+def Partner_Join_With_Us(email,partner_id):
+    subject = 'COngratulation You For Partner_id'
+    message = f'''
+    <h1>Auto Genrated Partner Id</h1>
+    <p>Your Partner id Is : {partner_id}</p>
+    <p>Dont Share This Id With Anyone</p>
+    <p>Thank you</p>
+    '''
+    email_from = settings.EMAIL_HOST_USER
+    recipient_list = [email]
+    fail_silently=False
+    send_mail(subject, message, email_from, recipient_list,fail_silently=fail_silently)
+   

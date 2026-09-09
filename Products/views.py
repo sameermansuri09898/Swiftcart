@@ -29,6 +29,7 @@ class BulkProductUploadView(APIView):
         csv_file = request.FILES.get(
             "file"
         )
+        print("CSV file received:", csv_file)
 
         category_id = request.data.get(
             "category_id",
@@ -39,7 +40,7 @@ class BulkProductUploadView(APIView):
         # File validation
         # -------------------------
 
-        if not csv_file:
+        if not csv_file :
 
             return Response(
                 {

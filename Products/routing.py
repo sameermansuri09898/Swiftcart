@@ -9,5 +9,4 @@ websocket_urlpatterns = [
         r"ws/bulk-import/(?P<import_id>\d+)/$",
         BulkImportConsumer.as_asgi()
     ),
-
 ]

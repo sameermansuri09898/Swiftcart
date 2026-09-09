@@ -11,6 +11,11 @@ import AuthContainer from "./components/credential/loginfun.jsx";
 import Address from "./components/Dashboard/Address.jsx";
 import UserDashboard from "./components/Dashboard/Dashboard.jsx"
 import ProductDetail from "./pages/ProductDetail.jsx"
+import BulkImport from "./pages/BulkImport.jsx";
+import RiderDashboard from "./components/Dashboard/RiderDash.jsx"
+
+
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -23,7 +28,8 @@ export default function App() {
           <Route path="/Register" element={<Register />} />
           <Route path="/address" element={<Address />}/>
           <Route path="/ProductDetail/:Detail_slug/" element={<ProductDetail />} />
-          
+          <Route path="/admin/bulk-import" element={<BulkImport />}/>
+          <Route path="/rider/dashboard" element={<RiderDashboard />}/>
 
           {/* Fallback route for undefined paths */}
           <Route path="*" element={<Navigate to="/" replace />} />
