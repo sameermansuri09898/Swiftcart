@@ -1,40 +1,42 @@
+// src/App.jsx
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Register from "./components/credential/Registration.jsx"
+
 // Layouts
 import MainLayout from "./layouts/MainLayout.jsx";
 
 // Pages & Components
 import Home from "./pages/Home.jsx";
 import Category from "./pages/Category.jsx";
+import Register from "./components/credential/Registration.jsx";
 import AuthContainer from "./components/credential/loginfun.jsx";
 import Address from "./components/Dashboard/Address.jsx";
-import UserDashboard from "./components/Dashboard/Dashboard.jsx"
-import ProductDetail from "./pages/ProductDetail.jsx"
+import UserDashboard from "./components/Dashboard/Dashboard.jsx";
+import ProductDetail from "./pages/ProductDetail.jsx";
 import BulkImport from "./pages/BulkImport.jsx";
-import RiderDashboard from "./components/Dashboard/RiderDash.jsx"
-
-
+import RiderDashboard from "./components/Dashboard/RiderDash/RiderDash.jsx";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Main Layout Wrapper */}
+        {/* Main Public / User Layout */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/authentications" element={<AuthContainer />} />
           <Route path="/product" element={<Category />} />
           <Route path="/Register" element={<Register />} />
-          <Route path="/address" element={<Address />}/>
+          <Route path="/address" element={<Address />} />
           <Route path="/ProductDetail/:Detail_slug/" element={<ProductDetail />} />
-          <Route path="/admin/bulk-import" element={<BulkImport />}/>
-          <Route path="/rider/dashboard" element={<RiderDashboard />}/>
+          <Route path="/admin/bulk-import" element={<BulkImport />} />
 
-          {/* Fallback route for undefined paths */}
+          {/* Fallback route */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
-        <Route path="/UserDashboard" element={<UserDashboard />}/>
+
+        {/* Dashboards outside MainLayout (so they don't inherit header/footer) */}
+        <Route path="/UserDashboard" element={<UserDashboard />} />
+        <Route path="/rider/dashboard" element={<RiderDashboard />} />
       </Routes>
     </BrowserRouter>
   );

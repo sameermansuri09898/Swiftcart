@@ -7,3 +7,25 @@ html, body, #root {
   padding: 0;
   box-sizing: border-box;
 }
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(114, 56, 245, 0.25);
+  border-radius: 999px;
+}
+
+/* subtle nav item transition, no scattershot motion */
+.nav-item {
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.pulse-dot {
+  animation: pulse-dot 1.8s ease-in-out infinite;
+}
