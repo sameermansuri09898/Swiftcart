@@ -251,6 +251,7 @@ export default function Register() {
               >
                 <option value="customer">Customer</option>
                 <option value="seller">Vendor / Seller</option>
+                <option value="rider">Delivery Partner</option>
               </select>
             </div>
           </div>

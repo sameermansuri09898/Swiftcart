@@ -7,7 +7,7 @@ from cloudinary.models import CloudinaryField
 class CustomUser(AbstractUser):
     mobile_number = models.CharField(max_length=15, unique=True, null=True, blank=True)
     is_verified = models.BooleanField(default=False)
-    role = models.CharField( choices=[('customer', 'Customer'), ('seller', 'Seller')])
+    role = models.CharField( choices=[('customer', 'Customer'), ('seller', 'Seller'),('rider', 'Rider')])
   
     profile_image = CloudinaryField("profile_image", folder ="Account/Profile",blank=True)
     email = models.EmailField(unique=True)

@@ -156,7 +156,8 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
         allowed_roles = [
             "customer",
-            "seller"
+            "seller",
+            "rider"
         ]
 
         if value not in allowed_roles:
