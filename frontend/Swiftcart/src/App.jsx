@@ -15,29 +15,32 @@ import UserDashboard from "./components/Dashboard/Dashboard.jsx";
 import ProductDetail from "./pages/ProductDetail.jsx";
 import BulkImport from "./pages/BulkImport.jsx";
 import RiderDashboard from "./components/Dashboard/RiderDash/RiderDash.jsx";
+import SellerDashboard from "./components/Dashboard/seller/SellerDashboard.jsx";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Main Public / User Layout */}
-        <Route element={<MainLayout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/authentications" element={<AuthContainer />} />
-          <Route path="/product" element={<Category />} />
-          <Route path="/Register" element={<Register />} />
-          <Route path="/address" element={<Address />} />
-          <Route path="/ProductDetail/:Detail_slug/" element={<ProductDetail />} />
-          <Route path="/admin/bulk-import" element={<BulkImport />} />
+     {/* Main Public / User Layout */}
+     <Route element={<MainLayout />}>
+     <Route path="/" element={<Home />} />
+     <Route path="/authentications" element={<AuthContainer />} />
+     <Route path="/product" element={<Category />} />
+     <Route path="/Register" element={<Register />} />
+     <Route path="/address" element={<Address />} />
+     <Route path="/ProductDetail/:Detail_slug/" element={<ProductDetail />} />
+     <Route path="/admin/bulk-import" element={<BulkImport />} />
 
-          {/* Fallback route */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
+     <Route path="*" element={<Navigate to="/" replace />} />
+   </Route>
 
-        {/* Dashboards outside MainLayout (so they don't inherit header/footer) */}
-        <Route path="/UserDashboard" element={<UserDashboard />} />
-        <Route path="/rider/dashboard" element={<RiderDashboard />} />
-      </Routes>
+   {/* Dashboards */}
+   <Route path="/UserDashboard" element={<UserDashboard />} />
+   <Route path="/rider/dashboard" element={<RiderDashboard />} />
+
+   {/* Seller Dashboard */}
+   <Route path="/seller/dashboard" element={<SellerDashboard />} />
+</Routes>
     </BrowserRouter>
   );
 }

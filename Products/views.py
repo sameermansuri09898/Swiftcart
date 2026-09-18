@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import AllowAny,IsAuthenticated
 from channels.layers import get_channel_layer
-
+from rest_framework import generics
 from rest_framework import status
 from rest_framework.views import APIView
 from .models import Categorys,Products,BulkImport
@@ -203,4 +203,14 @@ class ProductDetail(RetrieveAPIView):
     permission_classes = [AllowAny]
     lookup_field = "slug"
     lookup_url_kwarg ="Detail_slug"
-  
+
+class ProductListCreateView(generics.ListCreateAPIView):
+    queryset = Products.objects.all().select_related("category")
+    serializer_class = ProductSerializer
+
+
+# GET single, PUT, PATCH, DELETE
+class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Products.objects.all().select_related("category")
+    serializer_class = ProductSerializer
+    lookup_field = "uuid"
