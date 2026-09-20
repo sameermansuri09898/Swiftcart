@@ -11,7 +11,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from .tasks import random_otp, send_otp_email,send_wellcome_email
+from .tasks import random_otp, send_otp_email,send_wellcome_email,Partner_Join_With_Us
 from .otpserializer import OtpSerializer,OtpResendSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate

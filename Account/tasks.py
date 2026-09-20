@@ -36,6 +36,8 @@ def send_otp_email(email, otp):
     fail_silently=False
     send_mail(subject, message, email_from, recipient_list,fail_silently=fail_silently)
 
+    
+@shared_task
 def Partner_Join_With_Us(email,partner_id):
     subject = 'COngratulation You For Partner_id'
     message = f'''

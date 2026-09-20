@@ -25,10 +25,17 @@ const NAV_ITEMS = [
   { id: 'settings', label: 'Settings', icon: Settings },
 ]
 
-export default function Sidebar() {
-  const [active, setActive] = useState('home')
+export default function Sidebar({ activeTab, setActiveTab }) {
   const [online, setOnline] = useState(true)
   const [isOpen, setIsOpen] = useState(false)
+
+  // Safe Tab Change Handler
+  const handleTabClick = (tabId) => {
+    if (typeof setActiveTab === 'function') {
+      setActiveTab(tabId)
+    }
+    setIsOpen(false) // Mobile drawer close on selection
+  }
 
   return (
     <>
@@ -45,8 +52,9 @@ export default function Sidebar() {
         </div>
 
         <button
+          type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white active:scale-95 transition-all"
+          className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white active:scale-95 transition-all cursor-pointer"
           aria-label="Toggle Navigation"
         >
           {isOpen ? <X size={20} /> : <Menu size={20} />}
@@ -98,8 +106,9 @@ export default function Sidebar() {
             </div>
 
             <button
+              type="button"
               onClick={() => setOnline((v) => !v)}
-              className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-200 ease-in-out ${
+              className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-200 ease-in-out cursor-pointer ${
                 online ? 'bg-emerald-500' : 'bg-slate-700'
               }`}
               aria-label="Toggle Online Status"
@@ -116,15 +125,13 @@ export default function Sidebar() {
         {/* Navigation Items */}
         <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto scrollbar-none">
           {NAV_ITEMS.map(({ id, label, icon: Icon, badge }) => {
-            const isActive = active === id
+            const isActive = activeTab === id
             return (
               <button
                 key={id}
-                onClick={() => {
-                  setActive(id)
-                  setIsOpen(false)
-                }}
-                className={`w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-150 ${
+                type="button"
+                onClick={() => handleTabClick(id)}
+                className={`w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-150 cursor-pointer select-none ${
                   isActive
                     ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 font-semibold'
                     : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
@@ -154,7 +161,10 @@ export default function Sidebar() {
             <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
               Bring friends to SwiftCart and claim cash rewards.
             </p>
-            <button className="mt-3 w-full bg-indigo-600 hover:bg-indigo-500 text-white text-[12px] font-semibold rounded-xl py-2 flex items-center justify-center gap-1.5 transition-all shadow-md shadow-indigo-600/20 active:scale-[0.98]">
+            <button 
+              type="button"
+              className="mt-3 w-full bg-indigo-600 hover:bg-indigo-500 text-white text-[12px] font-semibold rounded-xl py-2 flex items-center justify-center gap-1.5 transition-all shadow-md shadow-indigo-600/20 active:scale-[0.98] cursor-pointer"
+            >
               Refer Now <ChevronRight size={14} />
             </button>
           </div>
@@ -172,7 +182,7 @@ export default function Sidebar() {
                 <p className="text-[10px] text-slate-500 font-medium">ID: #49201</p>
               </div>
             </div>
-            <button className="text-slate-500 hover:text-rose-400 transition-colors p-1.5">
+            <button type="button" className="text-slate-500 hover:text-rose-400 transition-colors p-1.5 cursor-pointer">
               <LogOut size={16} />
             </button>
           </div>
@@ -182,12 +192,13 @@ export default function Sidebar() {
       {/* Mobile Bottom Navigation Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-slate-950/95 backdrop-blur-lg border-t border-slate-800/80 px-2 py-2 flex items-center justify-around z-30">
         {NAV_ITEMS.slice(0, 4).map(({ id, label, icon: Icon }) => {
-          const isActive = active === id
+          const isActive = activeTab === id
           return (
             <button
               key={id}
-              onClick={() => setActive(id)}
-              className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all ${
+              type="button"
+              onClick={() => handleTabClick(id)}
+              className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all cursor-pointer ${
                 isActive ? 'text-indigo-400 font-semibold' : 'text-slate-500'
               }`}
             >

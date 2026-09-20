@@ -17,6 +17,8 @@ from rest_framework import generics
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .utils import generate_partner_id
+from Account.tasks import Partner_Join_With_Us
+
 
 class DeliveryPartnerProfileView(APIView):
     permission_classes = [IsAuthenticated]
@@ -50,7 +52,8 @@ class DeliveryPartnerRegistrationView(APIView):
 
         # Generate unique Partner ID
         partner_id = generate_partner_id()
-
+        Partner_Join_With_Us.delay(user.email, partner_id)  # Celery task to send email easily
+    
         serializer = DeliveryPartnerSerializer(data= request.data)
         if serializer.is_valid():
             serializer.save(user=user, Partner_id=partner_id)
@@ -85,7 +88,7 @@ class ToggleOnlineStatusView(APIView):
             "is_available": partner.is_available
         }, status=status.HTTP_200_OK)   
     
-# 2. Partner Document Upload & Verification
+# 2. Partner Document Upload & Verification here
 # ---------------------------------------------------------------------
 class PartnerDocumentUploadView(APIView):
     permission_classes = [IsAuthenticated]
