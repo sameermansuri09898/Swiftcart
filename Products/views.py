@@ -14,7 +14,8 @@ from rest_framework.generics import ListAPIView,RetrieveAPIView
 from django.core.cache import cache
 from .services.Productfilters import ProductFilter
 from django_filters.rest_framework import DjangoFilterBackend
-
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from .services.Pagination import ProductPagination
 
 
@@ -177,24 +178,30 @@ class categoryViews(ListAPIView):
     queryset = Categorys.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [AllowAny]
+    @method_decorator(cache_page(60 * 5))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
 
 
 class ProductListView(ListAPIView):
     serializer_class = ProductSerializer
-    permission_classes =[AllowAny]
+    permission_classes = [AllowAny]
 
     pagination_class = ProductPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = ProductFilter
 
+    # 5 minutes Redis cache
+    @method_decorator(cache_page(60 * 5))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
     def get_queryset(self):
-        return(
-            Products.objects.select_related("category")
-            .filter(is_available = True)
-            .order_by(
-                "-created_at",
-                "-id"
-            )
+        return (
+            Products.objects
+            .select_related("category")
+            .filter(is_available=True)
+            .order_by("-created_at", "-id")
         )
 
 class ProductDetail(RetrieveAPIView):
@@ -207,6 +214,9 @@ class ProductDetail(RetrieveAPIView):
 class ProductListCreateView(generics.ListCreateAPIView):
     queryset = Products.objects.all().select_related("category")
     serializer_class = ProductSerializer
+    @method_decorator(cache_page(60 * 5))
+    def dispatch(self, *args, **kwargs):
+            return super().dispatch(*args, **kwargs)
 
 
 # GET single, PUT, PATCH, DELETE

@@ -1,84 +1,128 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { ChevronRight, ChevronLeft, Plus, Star, ImageOff } from "lucide-react";
-
+import { ChevronRight, ChevronLeft } from "lucide-react";
 import "swiper/css";
 
+import ProductCard, { ProductCardSkeleton } from "./categoriesproductcard";
+
 /* ------------------------------------------------------------------ */
-/*  SAMPLE DATA — matches your API response structure                  */
+/*  API CONFIG                                                          */
 /* ------------------------------------------------------------------ */
 
-function buildProducts(label, count) {
-  const imgs = [
-    "https://cdn.zeptonow.com/production/ik-seo/tr:w-403,ar-1500-1500,pr-true,f-auto,q-40,dpr-2/cms/product_variant/79413751-6c51-44a4-b85a-280eb50464bf/Kurkure-Namkeen-Masala-Munch-Crunchy-Snacks.jpg",
-  ];
+const API_BASE_URL = "http://127.0.0.1:8000/Products/products/";
 
-  return Array.from({ length: count }, (_, i) => {
-    const mrp = 150 + i * 25;
-    const finalPrice = i % 3 !== 0 ? Math.round(mrp * 0.85) : mrp;
-    const isAvailable = i !== 2; // sample 1 out-of-stock item
+/* ------------------------------------------------------------------ */
+/*  API FETCHING — pulls every page, then groups products by category  */
+/* ------------------------------------------------------------------ */
 
-    return {
-      uuid: `${label.toLowerCase()}-${i + 1}`,
-      name: `${label} item ${i + 1} | Daily fresh & quality product`,
-      pr_small_url: imgs[0],
-      price_inr: mrp.toFixed(2),
-      final_price: finalPrice,
-      package_quantity: `${(i % 5) + 1}.00`,
-      package_unit: i % 2 === 0 ? "kg" : "g",
-      stock: isAvailable ? (i % 2 === 0 ? 3 : 20) : 0,
-      is_available: isAvailable,
-      rating: (4 + (i % 10) / 10).toFixed(1),
-      ratingCount: `${((i + 1) * 1.2).toFixed(1)}k`,
-    };
-  });
+async function fetchAllProducts() {
+  const firstRes = await fetch(`${API_BASE_URL}?page=1`);
+  if (!firstRes.ok) throw new Error(`API error: ${firstRes.status}`);
+  const firstData = await firstRes.json();
+
+  const totalPages = firstData.total_pages || 1;
+  let allResults = [...(firstData.results || [])];
+
+  if (totalPages > 1) {
+    const pageNumbers = Array.from({ length: totalPages - 1 }, (_, i) => i + 2);
+    const pages = await Promise.all(
+      pageNumbers.map((page) =>
+        fetch(`${API_BASE_URL}?page=${page}`).then((r) => {
+          if (!r.ok) throw new Error(`API error on page ${page}: ${r.status}`);
+          return r.json();
+        })
+      )
+    );
+    pages.forEach((p) => {
+      allResults = allResults.concat(p.results || []);
+    });
+  }
+
+  return allResults;
 }
 
-const categorySections = [
-  {
-    id: "detergents",
-    title: "Detergents, Dishwash & more",
-    products: buildProducts("Detergent", 12),
-  },
-  {
-    id: "snacks",
-    title: "Chips, Namkeen & Snacks",
-    products: buildProducts("Snacks", 12),
-  },
-  {
-    id: "beverages",
-    title: "Cold Drinks & Juices",
-    products: buildProducts("Beverage", 12),
-  },
-  {
-    id: "personal-care",
-    title: "Bath, Body & Personal Care",
-    products: buildProducts("Personal Care", 12),
-  },
-  {
-    id: "dairy",
-    title: "Dairy, Bread & Eggs",
-    products: buildProducts("Dairy", 12),
-  },
-];
+function groupByCategory(products) {
+  const map = new Map();
+
+  products.forEach((product) => {
+    const id = product.category ?? "uncategorized";
+    const title = product.category_name || "Other";
+
+    if (!map.has(id)) {
+      map.set(id, { id, title, products: [] });
+    }
+    map.get(id).products.push(product);
+  });
+
+  return Array.from(map.values());
+}
 
 /* ------------------------------------------------------------------ */
 /*  MAIN PAGE COMPONENT                                                */
 /* ------------------------------------------------------------------ */
 
 export default function CategorySections() {
-  const handleAddToCart = (product) => {
-    console.log("Added to cart:", product.name);
-  };
+  const [sections, setSections] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    (async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const products = await fetchAllProducts();
+        if (!isMounted) return;
+        setSections(groupByCategory(products));
+      } catch (err) {
+        if (isMounted) setError(err.message || "Failed to load products");
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // ---- Loading: show skeleton rows instead of a blank spinner screen ----
+  if (loading) {
+    return (
+      <div className="w-full bg-gray-50 py-4 min-h-screen">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <SkeletonSlider key={i} />
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full bg-gray-50 min-h-screen flex flex-col items-center justify-center gap-2 py-20 px-4 text-center">
+        <p className="text-red-600 font-semibold">Couldn't load products</p>
+        <p className="text-sm text-gray-500">{error}</p>
+      </div>
+    );
+  }
+
+  if (sections.length === 0) {
+    return (
+      <div className="w-full bg-gray-50 min-h-screen flex items-center justify-center py-20">
+        <p className="text-sm text-gray-500">No products found.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full bg-gray-50 py-4 min-h-screen">
-      {categorySections.map((section) => (
+      {sections.map((section) => (
         <ProductSlider
           key={section.id}
           title={section.title}
           products={section.products}
-          onAdd={handleAddToCart}
         />
       ))}
     </div>
@@ -89,7 +133,7 @@ export default function CategorySections() {
 /*  PRODUCT SLIDER ROW                                                 */
 /* ------------------------------------------------------------------ */
 
-function ProductSlider({ title, products, onAdd }) {
+function ProductSlider({ title, products }) {
   const swiperRef = useRef(null);
   const [isBeginning, setIsBeginning] = useState(true);
   const [isEnd, setIsEnd] = useState(false);
@@ -114,7 +158,6 @@ function ProductSlider({ title, products, onAdd }) {
           </a>
         </div>
 
-        {/* Slider Container with padding to avoid shadow clipping */}
         <div className="relative px-1 -mx-1 overflow-hidden sm:overflow-visible">
           <Swiper
             onSwiper={(swiper) => {
@@ -140,16 +183,12 @@ function ProductSlider({ title, products, onAdd }) {
               <SwiperSlide key={item.uuid} className="h-auto">
                 <ProductCard
                   product={item}
-                  badge={
-                    item.stock > 0 && item.stock < 5 ? "LOW STOCK" : null
-                  }
-                  onAdd={onAdd}
+                  badge={item.stock > 0 && item.stock < 5 ? "LOW STOCK" : null}
                 />
               </SwiperSlide>
             ))}
           </Swiper>
 
-          {/* Navigation Controls */}
           <button
             type="button"
             aria-label="Previous"
@@ -162,11 +201,7 @@ function ProductSlider({ title, products, onAdd }) {
               rounded-full bg-white shadow-lg border border-gray-200
               text-gray-700 hover:text-violet-600 hover:border-violet-300
               transition-all duration-200 z-20 cursor-pointer
-              ${
-                isBeginning
-                  ? "opacity-0 pointer-events-none"
-                  : "opacity-100 hover:scale-105"
-              }
+              ${isBeginning ? "opacity-0 pointer-events-none" : "opacity-100 hover:scale-105"}
             `}
           >
             <ChevronLeft size={20} />
@@ -184,11 +219,7 @@ function ProductSlider({ title, products, onAdd }) {
               rounded-full bg-gray-900 shadow-lg
               text-white hover:bg-violet-600
               transition-all duration-200 z-20 cursor-pointer
-              ${
-                isEnd
-                  ? "opacity-0 pointer-events-none"
-                  : "opacity-100 hover:scale-105"
-              }
+              ${isEnd ? "opacity-0 pointer-events-none" : "opacity-100 hover:scale-105"}
             `}
           >
             <ChevronRight size={20} />
@@ -200,186 +231,29 @@ function ProductSlider({ title, products, onAdd }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  DYNAMIC PRODUCT CARD                                                */
+/*  SKELETON SLIDER ROW — shown while the API request is in flight     */
 /* ------------------------------------------------------------------ */
 
-const formatINR = (value) =>
-  Math.round(Number(value) || 0).toLocaleString("en-IN");
-
-function getPricing(product) {
-  const mrp = Number(product.price_inr) || 0;
-  const finalPrice = Number(product.final_price) || 0;
-  const hasDiscount = mrp > finalPrice;
-  const discountAmount = hasDiscount ? Math.round(mrp - finalPrice) : 0;
-
-  return {
-    mrp: hasDiscount ? formatINR(mrp) : null,
-    price: formatINR(finalPrice),
-    discountAmount: hasDiscount ? discountAmount : null,
-  };
-}
-
-function ProductCard({ product, onAdd, badge }) {
-  const [imgError, setImgError] = useState(false);
-  const { mrp, price, discountAmount } = getPricing(product);
-  const outOfStock = !product.is_available || Number(product.stock) <= 0;
-
+function SkeletonSlider() {
   return (
-    <article
-      className="
-        group relative flex flex-col
-        w-full h-full
-        bg-white rounded-2xl
-        border border-gray-100
-        hover:shadow-lg hover:border-gray-200
-        transition-all duration-300
-        overflow-visible select-none
-      "
-    >
-      {/* Image Container */}
-      <div className="relative w-full aspect-square rounded-t-2xl overflow-hidden bg-gray-50 p-3 flex items-center justify-center">
-        {badge && (
-          <span
-            className="
-              absolute top-2 left-2 z-10
-              bg-blue-600 text-white
-              text-[9px] font-bold uppercase
-              px-2 py-0.5 rounded
-              tracking-wide
-            "
-          >
-            {badge}
-          </span>
-        )}
-
-        {!imgError && product.pr_small_url ? (
-          <img
-            src={product.pr_small_url}
-            alt={product.name || "Product"}
-            loading="lazy"
-            onError={() => setImgError(true)}
-            className={`
-              w-full h-full object-contain
-              transition-transform duration-300
-              group-hover:scale-105
-              ${outOfStock ? "opacity-40 grayscale" : ""}
-            `}
-          />
-        ) : (
-          <div className="flex flex-col items-center justify-center text-gray-400">
-            <ImageOff size={28} strokeWidth={1.5} />
-            <span className="text-[10px] mt-1">No Image</span>
-          </div>
-        )}
-
-        {outOfStock && (
-          <span
-            className="
-              absolute inset-x-0 bottom-2 z-10
-              mx-auto w-fit
-              bg-gray-900/80 text-white
-              text-[9px] font-semibold uppercase
-              px-2 py-0.5 rounded-full
-            "
-          >
-            Out of stock
-          </span>
-        )}
-
-        {/* Floating ADD Button */}
-        <button
-          type="button"
-          disabled={outOfStock}
-          onClick={(e) => {
-            e.stopPropagation();
-            onAdd?.(product);
-          }}
-          className={`
-            absolute -bottom-3 right-2.5 z-20
-            flex items-center gap-0.5
-            bg-white border
-            text-xs font-bold
-            rounded-lg shadow-md
-            transition-all duration-150
-            ${
-              outOfStock
-                ? "border-gray-200 text-gray-300 cursor-not-allowed"
-                : "border-pink-500 text-pink-600 hover:bg-pink-50 active:scale-95 cursor-pointer"
-            }
-          `}
-          style={{ padding: "5px 12px" ,marginBottom:"15px"}}
-        >
-          {!outOfStock && <Plus size={14} strokeWidth={3} />}
-          ADD
-        </button>
-      </div>
-
-      {/* Info Container */}
-      <div className="flex flex-col px-3 pb-3 pt-4 flex-1 justify-between">
-        <div>
-          {/* Price Row */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span
-              className="bg-green-700 text-white text-xs font-bold rounded"
-              style={{ padding: "2px 6px" }}
-            >
-              ₹{price}
-            </span>
-            {mrp && (
-              <span className="text-gray-400 text-xs line-through">
-                ₹{mrp}
-              </span>
-            )}
-          </div>
-
-          {/* Discount / Divider */}
-          {discountAmount ? (
-            <>
-              <span className="block text-green-600 text-[11px] font-semibold mt-1">
-                ₹{discountAmount} OFF
-              </span>
-              <div className="border-t border-dashed border-gray-200 my-1.5" />
-            </>
-          ) : (
-            <div className="h-2" />
-          )}
-
-          {/* Name */}
-          <h3
-            className="
-              text-[13px] font-semibold text-gray-900
-              leading-snug line-clamp-2
-            "
-          >
-            {product.name}
-          </h3>
-
-          {/* Pack */}
-          {product.package_quantity && (
-            <p className="text-[11px] text-gray-500 mt-1">
-              1 pack ({Number(product.package_quantity)}
-              {product.package_unit})
-            </p>
-          )}
+    <section className="max-w-[1440px] mx-auto px-0.5 lg:px-2">
+      <div className="max-w-full mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between mb-3">
+          <div className="h-5 sm:h-6 bg-gray-200 rounded w-40 animate-pulse" />
+          <div className="h-4 bg-gray-200 rounded w-12 animate-pulse" />
         </div>
 
-        {/* Rating */}
-        {product.rating && (
-          <div className="flex items-center gap-1 mt-2 pt-1">
-            <span className="flex items-center justify-center bg-green-700 rounded px-1 py-0.5">
-              <Star size={9} className="text-white fill-white" />
-            </span>
-            <span className="text-[11px] font-semibold text-gray-800">
-              {product.rating}
-            </span>
-            {product.ratingCount && (
-              <span className="text-[11px] text-gray-400">
-                ({product.ratingCount})
-              </span>
-            )}
-          </div>
-        )}
+        <div className="flex gap-3 overflow-hidden -mx-1 px-1 py-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="shrink-0 w-[46%] xs:w-[30%] sm:w-[18%] md:w-[15%] lg:w-[13%] xl:w-[11%]"
+            >
+              <ProductCardSkeleton />
+            </div>
+          ))}
+        </div>
       </div>
-    </article>
+    </section>
   );
 }

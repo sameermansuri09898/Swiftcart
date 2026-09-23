@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 import {
   Zap,
   Home,
@@ -13,7 +15,11 @@ import {
   X,
   LogOut,
   Sparkles,
+  Loader2,
+  AlertTriangle,
 } from 'lucide-react'
+
+const LOGOUT_API_URL = 'http://127.0.0.1:8000/account/logout/'
 
 const NAV_ITEMS = [
   { id: 'home', label: 'Home', icon: Home },
@@ -26,8 +32,11 @@ const NAV_ITEMS = [
 ]
 
 export default function Sidebar({ activeTab, setActiveTab }) {
+  const navigate = useNavigate()
   const [online, setOnline] = useState(true)
   const [isOpen, setIsOpen] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   // Safe Tab Change Handler
   const handleTabClick = (tabId) => {
@@ -35,6 +44,45 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       setActiveTab(tabId)
     }
     setIsOpen(false) // Mobile drawer close on selection
+  }
+
+  // Workable Logout Handler with API Call
+  const confirmLogout = async () => {
+    try {
+      setIsLoggingOut(true)
+      const accessToken =
+        localStorage.getItem('token') || localStorage.getItem('access_token')
+      const refreshToken = localStorage.getItem('refresh_token')
+
+      if (refreshToken && accessToken) {
+        await axios.post(
+          LOGOUT_API_URL,
+          { refresh_token: refreshToken },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        )
+      }
+    } catch (error) {
+      console.error('Logout API Error:', error?.response?.data || error.message)
+    } finally {
+      // Storage Cleanup
+      localStorage.removeItem('token')
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
+      localStorage.removeItem('user_role')
+
+      // Notify Navbar or Application about Auth state change
+      window.dispatchEvent(new Event('storage'))
+      window.dispatchEvent(new Event('auth-change'))
+
+      setIsLoggingOut(false)
+      setShowLogoutModal(false)
+      navigate('/authentications')
+    }
   }
 
   return (
@@ -46,8 +94,18 @@ export default function Sidebar({ activeTab, setActiveTab }) {
             <Zap size={18} className="text-white" fill="white" />
           </div>
           <div>
-            <p className="font-bold text-[14px] text-slate-100 tracking-wide">SwiftCart</p>
-            <p className="text-[10px] text-slate-400 font-medium -mt-0.5">Rider Console</p>
+            <button
+      type="button"
+      onClick={() => navigate('/')}
+      className="flex flex-col items-start cursor-pointer text-left focus:outline-none"
+    >
+      <p className="font-bold text-[14px] text-slate-100 tracking-wide">
+        SwiftCart
+      </p>
+      <p className="text-[10px] text-slate-400 font-medium -mt-0.5">
+        Rider Console
+      </p>
+    </button>
           </div>
         </div>
 
@@ -71,7 +129,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed lg:sticky top-0 left-0 z-50 flex flex-col w-[270px] shrink-0 h-screen bg-slate-950 text-slate-300 border-r border-slate-800/80 transition-transform duration-300 ease-out ${
+        className={`fixed lg:sticky top-0 left-0 z-50 flex flex-col w-[270px] shrink-0 h-screen bg-slate-950 text-slate-300 border-r border-slate-800/80 transition-transform duration-300 ease-out overflow-y-auto scrollbar-none ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
@@ -81,8 +139,18 @@ export default function Sidebar({ activeTab, setActiveTab }) {
             <Zap size={19} className="text-white" fill="white" />
           </div>
           <div>
-            <p className="font-extrabold text-[15px] tracking-wide text-white">SwiftCart</p>
-            <p className="text-[11px] text-slate-400 font-medium">Delivery Partner</p>
+            <button
+             type="button"
+              onClick={() => navigate('/')}
+              className="flex flex-col items-start cursor-pointer text-left focus:outline-none"
+            >
+              <p className="font-extrabold text-[15px] tracking-wide text-white">
+                SwiftCart
+              </p>
+              <p className="text-[11px] text-slate-400 font-medium">
+                Delivery Partner
+              </p>
+            </button>
           </div>
         </div>
 
@@ -123,7 +191,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
         </div>
 
         {/* Navigation Items */}
-        <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto scrollbar-none">
+        <nav className="flex-1 px-3 py-2 space-y-1">
           {NAV_ITEMS.map(({ id, label, icon: Icon, badge }) => {
             const isActive = activeTab === id
             return (
@@ -157,11 +225,13 @@ export default function Sidebar({ activeTab, setActiveTab }) {
               <Sparkles size={13} />
               <span>Incentive</span>
             </div>
-            <p className="text-[13px] font-bold text-slate-100">Refer & Earn ₹500</p>
+            <p className="text-[13px] font-bold text-slate-100">
+              Refer & Earn ₹500
+            </p>
             <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
               Bring friends to SwiftCart and claim cash rewards.
             </p>
-            <button 
+            <button
               type="button"
               className="mt-3 w-full bg-indigo-600 hover:bg-indigo-500 text-white text-[12px] font-semibold rounded-xl py-2 flex items-center justify-center gap-1.5 transition-all shadow-md shadow-indigo-600/20 active:scale-[0.98] cursor-pointer"
             >
@@ -170,7 +240,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
           </div>
         </div>
 
-        {/* Footer Profile & Version */}
+        {/* Footer Profile & Logout Trigger Button */}
         <div className="p-3 border-t border-slate-900 mt-auto">
           <div className="flex items-center justify-between p-2 rounded-xl hover:bg-slate-900/60 transition-colors">
             <div className="flex items-center gap-2.5">
@@ -178,11 +248,20 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                 JD
               </div>
               <div>
-                <p className="text-[12.5px] font-semibold text-slate-200 leading-tight">John Doe</p>
-                <p className="text-[10px] text-slate-500 font-medium">ID: #49201</p>
+                <p className="text-[12.5px] font-semibold text-slate-200 leading-tight">
+                  John Doe
+                </p>
+                <p className="text-[10px] text-slate-500 font-medium">
+                  ID: #49201
+                </p>
               </div>
             </div>
-            <button type="button" className="text-slate-500 hover:text-rose-400 transition-colors p-1.5 cursor-pointer">
+            <button
+              type="button"
+              onClick={() => setShowLogoutModal(true)}
+              title="Logout"
+              className="text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors p-2 rounded-lg cursor-pointer"
+            >
               <LogOut size={16} />
             </button>
           </div>
@@ -208,6 +287,66 @@ export default function Sidebar({ activeTab, setActiveTab }) {
           )
         })}
       </div>
+
+      {/* ── PROFESSIONAL LOGOUT MODAL POPUP ─────────────────────────── */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
+          {/* Modal Container */}
+          <div className="bg-slate-900 border border-slate-800 text-slate-100 w-full max-w-sm rounded-2xl p-6 shadow-2xl relative space-y-4 transform transition-all scale-100">
+            {/* Top Close Button */}
+            <button
+              onClick={() => !isLoggingOut && setShowLogoutModal(false)}
+              disabled={isLoggingOut}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+            >
+              <X size={18} />
+            </button>
+
+            {/* Icon Header */}
+            <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500">
+              <AlertTriangle size={24} />
+            </div>
+
+            {/* Content Text */}
+            <div>
+              <h3 className="text-lg font-bold text-white tracking-wide">
+                Confirm Logout
+              </h3>
+              <p className="text-sm text-slate-400 mt-1 leading-relaxed">
+                Are you sure you want to log out of your Rider Console? You will need to log in again to accept orders.
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowLogoutModal(false)}
+                disabled={isLoggingOut}
+                className="flex-1 py-2.5 rounded-xl border border-slate-700 bg-slate-800/80 hover:bg-slate-800 text-slate-300 font-semibold text-sm transition-all cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmLogout}
+                disabled={isLoggingOut}
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-sm transition-all shadow-lg shadow-rose-600/30 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {isLoggingOut ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Logging out...</span>
+                  </>
+                ) : (
+                  <span>Yes, Logout</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

@@ -12,7 +12,8 @@ import {
   CheckCircle2,
   AlertCircle,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
 const API_BASE = "http://127.0.0.1:8000/account";
 
 /* ---------------------------------------------------------
@@ -114,9 +115,10 @@ function BrandPanel() {
    Main Auth Page Component
 --------------------------------------------------------- */
 export default function AuthPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("login");
 
-  // Login States (Updated: 'username' changed to 'email')
+  // Login States
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
@@ -151,20 +153,29 @@ export default function AuthPage() {
       const response = await fetch(`${API_BASE}/login/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(loginData), // Now sends { email, password }
+        body: JSON.stringify(loginData),
       });
       const data = await response.json();
-      console.log(data)
 
       if (response.ok) {
+        // Save Access & Refresh Tokens
         if (data.access_token) localStorage.setItem("access_token", data.access_token);
-        console.log(localStorage.getItem("access_token"))
         if (data.refresh_token) localStorage.setItem("refresh_token", data.refresh_token);
+
+        // HERE: Set User Role from Backend API (Fallback to 'customer' if missing)
+        const role = data.user_role || data.role || "customer";
+        localStorage.setItem("user_role", role);
+
+        // Dispatch storage/auth event so Navbar updates instantly
+        window.dispatchEvent(new Event("storage"));
         window.dispatchEvent(new Event("auth-change"));
 
-  // Navigate to Home Page
         setLoginBanner({ type: "success", text: "Signed in successfully." });
-          window.location.href = "/";
+
+        // Navigate after brief delay
+        setTimeout(() => {
+          navigate("/");
+        }, 500);
       } else {
         setLoginBanner({
           type: "error",
@@ -201,6 +212,7 @@ export default function AuthPage() {
 
       if (response.ok) {
         setOtpBanner({ type: "success", text: "Email verified successfully." });
+        setTimeout(() => setActiveTab("login"), 1500);
       } else {
         setOtpBanner({
           type: "error",
@@ -407,8 +419,8 @@ export default function AuthPage() {
 
                 <p className="text-center text-sm text-slate-500 mt-6">
                   New to Swiftcart?{" "}
-                  <Link to="/Register"className="font-semibold text-amber-600 hover:text-amber-700">
-                  Create an account
+                  <Link to="/Register" className="font-semibold text-amber-600 hover:text-amber-700">
+                    Create an account
                   </Link>
                 </p>
               </div>

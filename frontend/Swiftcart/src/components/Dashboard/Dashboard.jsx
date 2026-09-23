@@ -14,6 +14,10 @@ import {
   ShoppingBag,
   Loader2,
   AlertCircle,
+  ShieldCheck,
+  ChevronRight,
+  User,
+  Search,
 } from "lucide-react";
 import AddressSection from "./Address";
 
@@ -25,6 +29,7 @@ export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState("addresses");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // Profile data states
   const [userData, setUserData] = useState(null);
@@ -65,10 +70,8 @@ export default function UserDashboard() {
     fetchUserProfile();
   }, [navigate]);
 
-  // ── LOGOUT HANDLER (Django JWT Integration) ────────────────────────────
-  const handleLogout = async () => {
-    if (!window.confirm("Do you want to Logout?")) return;
-
+  // ── LOGOUT HANDLER ──────────────────────────────────────────────────
+  const confirmLogout = async () => {
     try {
       setIsLoggingOut(true);
       const accessToken =
@@ -93,7 +96,13 @@ export default function UserDashboard() {
       localStorage.removeItem("token");
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
+      localStorage.removeItem("user_role");
+
+      window.dispatchEvent(new Event("storage"));
+      window.dispatchEvent(new Event("auth-change"));
+
       setIsLoggingOut(false);
+      setShowLogoutModal(false);
       navigate("/authentications");
     }
   };
@@ -107,7 +116,7 @@ export default function UserDashboard() {
     { id: "profile", label: "Account Settings", icon: Settings },
   ];
 
-  // Helper image URL generator (Cloudinary / Local URL handling)
+  // Avatar Generator
   const getAvatarUrl = () => {
     if (userData?.pr_small_url) return userData.pr_small_url;
     if (userData?.profile_image) {
@@ -117,15 +126,15 @@ export default function UserDashboard() {
     }
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(
       userData?.username || "User"
-    )}&background=6366f1&color=fff`;
+    )}&background=4f46e5&color=fff&bold=true`;
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="flex items-center gap-3 text-slate-600 font-medium">
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+        <div className="flex items-center gap-3 px-6 py-4 bg-white rounded-2xl shadow-sm border border-slate-200 text-slate-600 font-medium">
           <Loader2 className="animate-spin text-indigo-600" size={24} />
-          <span>Loading Profile...</span>
+          <span>Loading Account Dashboard...</span>
         </div>
       </div>
     );
@@ -133,37 +142,47 @@ export default function UserDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col">
-      {/* HEADER BAR */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      {/* ── ECOMMERCE STORE HEADER BAR ──────────────────────────────── */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+          
+          {/* Brand & Toggle */}
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100"
+              className="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors"
+              aria-label="Toggle Sidebar"
             >
               <Menu size={22} />
             </button>
-            <div
+
+            <button
               onClick={() => navigate("/")}
-              className="flex items-center gap-2 cursor-pointer"
+              className="flex items-center gap-2 cursor-pointer focus:outline-none"
             >
-              <div className="w-9 h-9 bg-slate-900 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-md">
-                E
+              <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-md shadow-indigo-600/20">
+                S
               </div>
               <span className="font-extrabold text-xl tracking-tight text-slate-900">
                 Store<span className="text-indigo-600">Pro</span>
               </span>
-            </div>
+            </button>
           </div>
 
+          {/* Right Header Navigation Controls */}
           <div className="flex items-center gap-4">
             <button
               onClick={() => setActiveTab("notifications")}
-              className="relative p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors"
+              className="relative p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+              title="Notifications"
             >
               <Bell size={20} />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-indigo-600" />
             </button>
+
             <div className="h-6 w-px bg-slate-200 hidden sm:block" />
+
+            {/* Profile Brief in Navbar */}
             <div className="flex items-center gap-3">
               <img
                 src={getAvatarUrl()}
@@ -174,8 +193,9 @@ export default function UserDashboard() {
                 <p className="text-xs font-bold text-slate-900 leading-none capitalize">
                   {userData?.username}
                 </p>
-                <p className="text-[10px] text-slate-400 mt-0.5 capitalize">
-                  {userData?.role || "Customer"} Verified Account
+                <p className="text-[10px] text-indigo-600 font-semibold mt-1 capitalize flex items-center gap-1">
+                  <ShieldCheck size={11} className="inline" />
+                  {userData?.role || "Customer Account"}
                 </p>
               </div>
             </div>
@@ -183,54 +203,61 @@ export default function UserDashboard() {
         </div>
       </header>
 
-      {/* DASHBOARD LAYOUT */}
+      {/* ── DASHBOARD BODY CONTENT ───────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1 flex gap-8 relative">
-        {/* MOBILE SIDEBAR OVERLAY */}
+        
+        {/* Mobile Backdrop Overlay */}
         {isSidebarOpen && (
           <div
             onClick={() => setIsSidebarOpen(false)}
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden"
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 lg:hidden transition-opacity"
           />
         )}
 
-        {/* SIDEBAR NAVIGATION */}
+        {/* ── SIDEBAR NAVIGATION ──────────────────────────────────── */}
         <aside
-          className={`fixed lg:static top-0 left-0 bottom-0 z-50 w-72 bg-white lg:bg-transparent p-6 lg:p-0 border-r lg:border-none border-slate-200 transition-transform duration-300 transform ${
+          className={`fixed lg:sticky top-0 lg:top-20 left-0 bottom-0 lg:bottom-auto z-50 lg:z-10 w-72 h-screen lg:h-auto bg-white lg:bg-transparent p-6 lg:p-0 border-r lg:border-none border-slate-200 transition-transform duration-300 transform ${
             isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-          } flex flex-col justify-between`}
+          } flex flex-col justify-between overflow-y-auto`}
         >
           <div className="space-y-6">
-            <div className="flex items-center justify-between lg:hidden pb-4 border-b border-slate-100">
-              <span className="font-bold text-lg text-slate-900">
-                Dashboard Menu
+            
+            {/* Mobile Header Close */}
+            <div className="flex items-center justify-between lg:hidden pb-3 border-b border-slate-100">
+              <span className="font-bold text-sm text-slate-900">
+                Account Navigation
               </span>
               <button
                 onClick={() => setIsSidebarOpen(false)}
-                className="text-slate-400 p-1"
+                className="text-slate-400 p-1 hover:text-slate-600"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
+            {/* Profile User Info Card */}
+            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3.5">
               <img
                 src={getAvatarUrl()}
                 alt={userData?.username || "User"}
-                className="w-12 h-12 rounded-2xl object-cover ring-2 ring-indigo-500/20"
+                className="w-11 h-11 rounded-full object-cover ring-2 ring-indigo-500/20 shrink-0"
               />
-              <div className="overflow-hidden">
+              <div className="min-w-0 flex-1">
                 <h4 className="font-bold text-sm text-slate-900 truncate capitalize">
                   {userData?.username}
                 </h4>
-                <p className="text-xs text-slate-500 truncate">
+                <p className="text-xs text-slate-500 truncate mt-0.5">
                   {userData?.email}
                 </p>
-                <p className="text-[10px] text-indigo-600 font-semibold truncate mt-0.5">
-                  {userData?.mobile_number}
-                </p>
+                {userData?.mobile_number && (
+                  <p className="text-[11px] text-indigo-600 font-semibold truncate mt-0.5">
+                    {userData?.mobile_number}
+                  </p>
+                )}
               </div>
             </div>
 
+            {/* Navigation Tab Links */}
             <nav className="space-y-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -242,26 +269,24 @@ export default function UserDashboard() {
                       setActiveTab(item.id);
                       setIsSidebarOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer ${
                       isActive
-                        ? "bg-slate-900 text-white shadow-lg shadow-slate-900/10"
+                        ? "bg-slate-900 text-white shadow-md shadow-slate-900/10 font-bold"
                         : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <Icon
                         size={18}
-                        className={
-                          isActive ? "text-indigo-400" : "text-slate-400"
-                        }
+                        className={isActive ? "text-indigo-400" : "text-slate-400"}
                       />
-                      <span>{item.label}</span>
+                      <span className="tracking-wide">{item.label}</span>
                     </div>
                     {item.badge !== undefined && (
                       <span
-                        className={`text-xs px-2 py-0.5 rounded-full font-bold ${
+                        className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
                           isActive
-                            ? "bg-indigo-500 text-white"
+                            ? "bg-indigo-600 text-white"
                             : "bg-slate-100 text-slate-600 border border-slate-200"
                         }`}
                       >
@@ -274,45 +299,103 @@ export default function UserDashboard() {
             </nav>
           </div>
 
-          {/* LOG OUT BUTTON */}
-          <div className="pt-6 border-t border-slate-200/80 mt-6">
+          {/* Logout Trigger */}
+          <div className="pt-6 border-t border-slate-200/80 mt-8">
             <button
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-50"
+              onClick={() => setShowLogoutModal(true)}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
             >
               <LogOut size={18} />
-              <span>{isLoggingOut ? "Logging Out..." : "Log Out"}</span>
+              <span>Log Out</span>
             </button>
           </div>
         </aside>
 
-        {/* MAIN CONTENT AREA */}
+        {/* ── MAIN CONTENT SECTION ────────────────────────────────── */}
         <main className="flex-1 min-w-0">
           {profileError && (
-            <div className="mb-6 flex items-center gap-2 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-sm font-medium">
-              <AlertCircle size={18} className="shrink-0" />
+            <div className="mb-6 flex items-center gap-2.5 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-xs font-medium">
+              <AlertCircle size={18} className="shrink-0 text-rose-500" />
               <span>{profileError}</span>
             </div>
           )}
 
+          {/* Saved Addresses Section */}
           {activeTab === "addresses" && <AddressSection />}
 
+          {/* Section Placeholders */}
           {activeTab !== "addresses" && (
-            <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center space-y-3">
-              <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto text-slate-400">
-                <ShoppingBag size={22} />
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center space-y-4 shadow-xs">
+              <div className="w-14 h-14 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-center mx-auto text-indigo-600">
+                <ShoppingBag size={24} />
               </div>
-              <h3 className="font-bold text-slate-900 capitalize">
-                {activeTab} Section
-              </h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Is section ka content jald hi available hoga.
-              </p>
+              <div className="space-y-1">
+                <h3 className="font-bold text-slate-900 text-base capitalize">
+                  {activeTab} Section
+                </h3>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+                  Is feature ka update aane wala hai. Aap abhi apne saved addresses ko manage kar sakte hain.
+                </p>
+              </div>
             </div>
           )}
         </main>
       </div>
+
+      {/* ── LOGOUT POPUP MODAL ────────────────────────────────────── */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white border border-slate-200 text-slate-800 w-full max-w-sm rounded-2xl p-6 shadow-2xl space-y-4 relative">
+            <button
+              onClick={() => !isLoggingOut && setShowLogoutModal(false)}
+              disabled={isLoggingOut}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-lg transition-colors disabled:opacity-50"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600">
+              <LogOut size={22} />
+            </div>
+
+            <div>
+              <h3 className="text-base font-bold text-slate-900 tracking-wide">
+                Confirm Logout
+              </h3>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                Are you sure you want to log out of your StorePro account?
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowLogoutModal(false)}
+                disabled={isLoggingOut}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold text-xs transition-all cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmLogout}
+                disabled={isLoggingOut}
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs transition-all shadow-md shadow-rose-600/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {isLoggingOut ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Logging out...</span>
+                  </>
+                ) : (
+                  <span>Yes, Logout</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

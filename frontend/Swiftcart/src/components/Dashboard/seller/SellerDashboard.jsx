@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import api from "../../services/productapi";
-
+import { useNavigate } from "react-router-dom";
 import StatCards from "./StatCards";
 import ProductForm from "./ProductForm";
 import ProductTable from "./ProductTable";
@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 
 export default function SellerDashboard() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [editProduct, setEditProduct] = useState(null);
 
@@ -323,6 +324,16 @@ export default function SellerDashboard() {
                   className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 shrink-0"
                 >
                   <PlusCircle size={16} /> Add New Product
+                </button>
+              </div>
+
+              <div>
+                <button  onClick={() => {
+                  navigate(`/admin/bulk-import`);
+                }}
+                  className="bg-red-600 hover:red-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 shrink-0"
+                >
+                  <PlusCircle size={16} />Add Bulk Products
                 </button>
               </div>
 
