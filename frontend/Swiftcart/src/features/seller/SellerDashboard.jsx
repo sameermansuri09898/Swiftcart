@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import StatCards from "./StatCards";
 import ProductForm from "./ProductForm";
 import ProductTable from "./ProductTable";
-import Pagination from "../../common/pagination";
+import Pagination from "../../components/common/pagination";
 
 import {
   LayoutDashboard,

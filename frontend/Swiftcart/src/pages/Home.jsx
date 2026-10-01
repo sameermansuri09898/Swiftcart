@@ -1,6 +1,6 @@
-import ImageCategory from "../components/swipers/catgeroyswiper.jsx";
-import HeaderSponsr from "../components/sponsor/headersponsor.jsx";
-import Homepagedata from "../components/products/categrizedproduct.jsx";
+import ImageCategory from "../features/swipers/catgeroyswiper.jsx";
+import HeaderSponsr from "../features/sponsor/headersponsor.jsx";
+import Homepagedata from "../features/products/categrizedproduct.jsx";
 
 export default function Home() {
   return (

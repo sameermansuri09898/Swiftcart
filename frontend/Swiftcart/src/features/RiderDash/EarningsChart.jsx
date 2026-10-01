@@ -7,7 +7,7 @@ import {
   BarElement,
   Tooltip,
 } from 'chart.js'
-import { earningsOverview } from '../../data/mockData'
+import { earningsOverview } from '../../components/data/mockData'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip)
 

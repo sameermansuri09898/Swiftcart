@@ -1,6 +1,6 @@
 import React from 'react'
 import { Package, MapPinCheck, CheckCheck } from 'lucide-react'
-import { recentActivity } from '../../data/mockData'
+import { recentActivity } from '../../components/data/mockData'
 
 const ICONS = {
   pickup: { icon: Package, color: 'text-brand-600 bg-brand-100' },

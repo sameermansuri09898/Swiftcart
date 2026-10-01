@@ -14,7 +14,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import SearchBar from "./searchbar.jsx";
 import locationImg from "../../assets/location.png";
-import { useCart } from "../services/CartContext.jsx";
+import { useCart } from "../../services/CartContext.jsx";
 
 export default function Navbar() {
   const [openLocationModal, setOpenLocationModal] = useState(false);

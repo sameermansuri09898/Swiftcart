@@ -7,15 +7,19 @@ import MainLayout from "./layouts/MainLayout.jsx";
 
 // Pages & Components
 import Home from "./pages/Home.jsx";
-import Category from "./pages/Category.jsx";
-import Register from "./components/credential/Registration.jsx";
-import AuthContainer from "./components/credential/loginfun.jsx";
-import Address from "./components/Dashboard/Address.jsx";
-import UserDashboard from "./components/Dashboard/Dashboard.jsx";
-import ProductDetail from "./pages/ProductDetail.jsx";
-import BulkImport from "./pages/BulkImport.jsx";
-import RiderDashboard from "./components/Dashboard/RiderDash/RiderDash.jsx";
-import SellerDashboard from "./components/Dashboard/seller/SellerDashboard.jsx";
+import Category from "./features/products/Category.jsx";
+
+import Register from "./features/auth/components/Registration.jsx";
+import AuthContainer from "./features/auth/components/loginfun.jsx";
+
+import Address from "./features/Address/components/Address.jsx";
+
+import UserDashboard from "./features/consumer/components/Dashboard.jsx";
+import ProductDetail from "./features/products/ProductDetail.jsx";
+import BulkImport from "./features/products/BulkImport.jsx";
+
+import RiderDashboard from "./features/RiderDash/RiderDash.jsx";
+import SellerDashboard from "./features/seller/SellerDashboard.jsx";
 
 export default function App() {
   return (

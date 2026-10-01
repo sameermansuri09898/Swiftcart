@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Plus, Minus, Star, ImageOff, Heart, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useCart } from "../services/CartContext.jsx";
+import { useCart } from "../../services/CartContext.jsx";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */

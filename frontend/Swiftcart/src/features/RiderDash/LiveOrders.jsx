@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { MoreVertical, MapPin, User } from 'lucide-react'
-import { liveOrders } from '../../data/mockData'
+import { liveOrders } from '../../components/data/mockData'
 
 const TABS = [
   { id: 'ongoing', label: 'Ongoing' },

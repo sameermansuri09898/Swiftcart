@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import ProductCard from "../components/products/ProductCard";
-import ProductSkeleton from "../components/layout/ProductSkeleton";
-import Pagination from "../components/common/pagination";
+import ProductCard from "./ProductCard";
+import ProductSkeleton from "../../components/layout/ProductSkeleton";
+import Pagination from "../../components/common/pagination";
 
 
 export default function ProductGridDemo() {

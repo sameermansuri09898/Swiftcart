@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
     getCategories,
     uploadBulkCSV,
-} from "../components/common/BulkImportApi";
+} from "../../components/common/BulkImportApi";
 
 
 // ---------------------------------------------------------

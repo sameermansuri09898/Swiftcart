@@ -9,7 +9,7 @@ import {
   LineElement,
   Tooltip,
 } from 'chart.js'
-import { todayStats } from '../../data/mockData'
+import { todayStats } from '../../components/data/mockData'
 
 // Chart.js components ko register karna zaroori hai
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip)

@@ -1,6 +1,6 @@
 import React from "react";
 import { X, Minus, Plus, Trash2, ShoppingBag, AlertCircle, Loader2 } from "lucide-react";
-import { useCart } from "../services/CartContext";
+import { useCart } from "../../services/CartContext";
 
 const formatINR = (value) =>
   Math.round(Number(value) || 0).toLocaleString("en-IN");

@@ -19,7 +19,7 @@ import {
   User,
   Search,
 } from "lucide-react";
-import AddressSection from "./Address";
+import AddressSection from "../../Address/components/Address";
 
 const LOGOUT_API_URL = "http://127.0.0.1:8000/account/logout/";
 const PROFILE_API_URL = "http://127.0.0.1:8000/account/Profile/";

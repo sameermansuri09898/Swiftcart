@@ -1,6 +1,6 @@
 import React from 'react'
 import { MapPin, Phone, Home as HomeIcon, PackageCheck, CheckCircle2 } from 'lucide-react'
-import { currentDelivery } from '../../data/mockData'
+import { currentDelivery } from '../../components/data/mockData'
 
 export default function CurrentDelivery() {
   const d = currentDelivery

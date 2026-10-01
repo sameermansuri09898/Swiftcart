@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Plus, Minus, Star, ImageOff, Heart, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom"; // 1. useNavigate Import Kiya
-import { useCart } from "../services/CartContext.jsx";
+import { useCart } from "../../services/CartContext";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */

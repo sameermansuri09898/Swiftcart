@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import AddressCard from "./addcard"
-import AddressForm from "../credential/addform";
+import AddressForm from "../../auth/components/addform";
 import {
   getAddresses,
   deleteAddress,
   setDefaultAddress,
   updateAddress,
   createAddress,
-} from "../services/addservices";
+} from "../../../services/addservices";
 
 export default function AddressSection() {
   const [addresses, setAddresses] = useState([]);
