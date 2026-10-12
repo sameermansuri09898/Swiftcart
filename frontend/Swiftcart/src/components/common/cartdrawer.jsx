@@ -1,7 +1,7 @@
 import React from "react";
 import { X, Minus, Plus, Trash2, ShoppingBag, AlertCircle, Loader2 } from "lucide-react";
 import { useCart } from "../../services/CartContext";
-
+import { useNavigate } from "react-router-dom";
 const formatINR = (value) =>
   Math.round(Number(value) || 0).toLocaleString("en-IN");
 
@@ -99,10 +99,15 @@ export default function CartDrawer() {
     removeItem,
     clearCart,
   } = useCart();
+  const navigate = useNavigate();
 
   const handleIncrement = (item) => updateQuantity(item.id, item.quantity + 1);
   const handleDecrement = (item) => updateQuantity(item.id, item.quantity - 1);
   const handleRemove = (item) => removeItem(item.id);
+  const handleProceedToCheckout = () => {
+    // Cart drawer close logic agar koi state ho
+    navigate("/checkout");
+  };
 
   return (
     <>
@@ -212,7 +217,7 @@ export default function CartDrawer() {
                 ₹{formatINR(grandTotal)}
               </span>
             </div>
-            <button
+            <button onClick={handleProceedToCheckout}
               type="button"
               className="w-full h-12 bg-slate-950 hover:bg-slate-800 text-white font-bold text-sm rounded-xl shadow-sm transition-colors"
             >

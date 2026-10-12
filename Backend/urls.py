@@ -25,4 +25,5 @@ urlpatterns = [
     path('Products/', include('Products.urls')),
     path('Orders/', include('Order.urls')),
     path('api/delivery-partner/', include('Delivery.urls')),
+    # path('api/realtime-live/', include('RealtimeLive.urls')),
 ]

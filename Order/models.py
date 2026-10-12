@@ -71,7 +71,7 @@ class OrderItem(models.Model):
     product_image = models.CharField(max_length=500, null=True, blank=True)
     
     quantity = models.PositiveIntegerField(default=1)
-    price = models.DecimalField(max_digits=10, decimal_places=2) # Price at the time of purchase
+    price = models.DecimalField(max_digits=10, decimal_places=2,null=True, blank=True, default=0.00) # Price at the time of purchase
 
     @property
     def total_price(self):

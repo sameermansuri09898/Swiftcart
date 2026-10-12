@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "Order",
     "Delivery",
+    "RealtimeLive",
 ]
 
 MIDDLEWARE = [

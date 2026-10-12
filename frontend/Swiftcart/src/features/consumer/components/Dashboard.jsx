@@ -6,8 +6,6 @@ import {
   Bell,
   Heart,
   MapPin,
-  CreditCard,
-  Settings,
   LogOut,
   Menu,
   X,
@@ -15,18 +13,16 @@ import {
   Loader2,
   AlertCircle,
   ShieldCheck,
-  ChevronRight,
-  User,
-  Search,
 } from "lucide-react";
 import AddressSection from "../../Address/components/Address";
+import OrdersSection from "../../Orders/components/OrdersSection";
 
 const LOGOUT_API_URL = "http://127.0.0.1:8000/account/logout/";
 const PROFILE_API_URL = "http://127.0.0.1:8000/account/Profile/";
 
 export default function UserDashboard() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("addresses");
+  const [activeTab, setActiveTab] = useState("orders");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -62,7 +58,7 @@ export default function UserDashboard() {
           localStorage.clear();
           navigate("/authentications");
         }
-      } finally {
+      }finally {
         setLoading(false);
       }
     };
@@ -108,12 +104,10 @@ export default function UserDashboard() {
   };
 
   const navItems = [
-    { id: "orders", label: "My Orders", icon: Package, badge: 1 },
+    { id: "orders", label: "My Orders", icon: Package },
     { id: "notifications", label: "Notifications", icon: Bell, badge: 2 },
-    { id: "wishlist", label: "Wishlist", icon: Heart, badge: 3 },
+    { id: "wishlist", label: "Wishlist", icon: Heart },
     { id: "addresses", label: "Saved Addresses", icon: MapPin },
-    { id: "payments", label: "Payment Methods", icon: CreditCard },
-    { id: "profile", label: "Account Settings", icon: Settings },
   ];
 
   // Avatar Generator
@@ -132,7 +126,7 @@ export default function UserDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
-        <div className="flex items-center gap-3 px-6 py-4 bg-white rounded-2xl shadow-sm border border-slate-200 text-slate-600 font-medium">
+        <div className="flex items-center gap-3 px-6 py-4 bg-white rounded-2xl shadow-sm border border-slate-200 text-slate-600 font-medium text-sm">
           <Loader2 className="animate-spin text-indigo-600" size={24} />
           <span>Loading Account Dashboard...</span>
         </div>
@@ -145,7 +139,6 @@ export default function UserDashboard() {
       {/* ── ECOMMERCE STORE HEADER BAR ──────────────────────────────── */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          
           {/* Brand & Toggle */}
           <div className="flex items-center gap-3">
             <button
@@ -205,7 +198,6 @@ export default function UserDashboard() {
 
       {/* ── DASHBOARD BODY CONTENT ───────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1 flex gap-8 relative">
-        
         {/* Mobile Backdrop Overlay */}
         {isSidebarOpen && (
           <div
@@ -221,7 +213,6 @@ export default function UserDashboard() {
           } flex flex-col justify-between overflow-y-auto`}
         >
           <div className="space-y-6">
-            
             {/* Mobile Header Close */}
             <div className="flex items-center justify-between lg:hidden pb-3 border-b border-slate-100">
               <span className="font-bold text-sm text-slate-900">
@@ -320,11 +311,14 @@ export default function UserDashboard() {
             </div>
           )}
 
-          {/* Saved Addresses Section */}
+          {/* Tab 1: Orders Section */}
+          {activeTab === "orders" && <OrdersSection />}
+
+          {/* Tab 2: Saved Addresses Section */}
           {activeTab === "addresses" && <AddressSection />}
 
-          {/* Section Placeholders */}
-          {activeTab !== "addresses" && (
+          {/* Fallback Section Placeholders */}
+          {activeTab !== "addresses" && activeTab !== "orders" && (
             <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center space-y-4 shadow-xs">
               <div className="w-14 h-14 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-center mx-auto text-indigo-600">
                 <ShoppingBag size={24} />
@@ -334,7 +328,7 @@ export default function UserDashboard() {
                   {activeTab} Section
                 </h3>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-                  Is feature ka update aane wala hai. Aap abhi apne saved addresses ko manage kar sakte hain.
+                  Is feature ka update jaldi aayega. Aap abhi apne orders aur saved addresses manage kar sakte hain.
                 </p>
               </div>
             </div>
